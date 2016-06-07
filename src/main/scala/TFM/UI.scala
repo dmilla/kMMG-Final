@@ -21,7 +21,6 @@ class UI extends MainFrame {
   val watcher = controlSystem.actorOf(Props(classOf[DeviceWatcher]))
   val deviceController = controlSystem.actorOf(Props(classOf[DeviceController]))
   val markovExtractor = controlSystem.actorOf(Props(classOf[MarkovExtractor]))
-  //val midiSender = controlSystem.actorOf(Props[MidiSender])
   val controller = controlSystem.actorOf(Props(classOf[KController]))
   val conductor = controlSystem.actorOf(Props[Conductor])
   val joystickChart = controlSystem.actorOf(Props[JoystickChart])
@@ -70,6 +69,9 @@ class UI extends MainFrame {
     contents += Button("Generar Melodía") {
       conductor ! StartMelodyGenerationRequest
     }
+    contents += Button("Parar Melodía") {
+      conductor ! StopMelodyGenerationRequest
+    }
     contents += Swing.VStrut(10)
 
     contents += new Label("Información")
@@ -81,11 +83,6 @@ class UI extends MainFrame {
     border = Swing.EmptyBorder(10, 10, 10, 10)
   }
 
- /* def updateState(state: Int) = {
-    lastNoteField.text = state.toString
-    markovExtractor ! UpdateMarkovProbsRequest(state)
-  }
-*/
   def addOutput(out: String): Unit = {
     outputField.append(out + "\n")
     outputField.peer.setCaretPosition(outputField.peer.getDocument.getLength)

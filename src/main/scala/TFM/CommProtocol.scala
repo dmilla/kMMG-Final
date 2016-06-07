@@ -20,9 +20,11 @@ object CommProtocol {
   case class ConnectToDeviceRequest(port: String)
   case class NotifyNoteFinished()
   case class StartMelodyGenerationRequest()
+  case class StopMelodyGenerationRequest()
   case class UpdateCoords(coords: (Double, Double))
   case class SetVisible()
   case class CheckSequencerTick()
   case class NewSequencerTick(tick: Long)
+  case class TransitionsList(list: List[((Int, Int), Double)])
 
 }

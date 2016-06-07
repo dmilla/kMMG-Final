@@ -19,21 +19,25 @@ import scala.concurrent.Await
 
 class Conductor extends Actor{
 
+  val durations = List(1, 2, 3, 4, 6, 8, 12, 16)
+
   val sequencer = MidiSystem.getSequencer
   val sequence = new Sequence(Sequence.PPQ, 4)
   val track = sequence.createTrack()
 
-  var lastState: (Int, Int) = (0, 4)
-  var lastCoords: (Double, Double) = (0.5, 0.5)
+  var currentState: (Int, Int) = (0, 4)
+  var currentStateTransitions: List[((Int, Int), Double)] = List.empty[((Int, Int), Double)]
+  var currentCoords: (Double, Double) = (0.5, 0.5)
   var lastNoteCoords: (Double, Double) = (0.5, 0.5)
 
-  var outNormalization: Byte = 36
+  var outNormalization: Byte = 36 // TODO add output normalization to GUI
 
   var initialized: Boolean = false
   var started: Boolean = false
 
   var currentTick: Long = 0
-  var currentNoteEndTick: Long = 0
+  //var currentNoteEndTick: Long = 0
+  var currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, outNormalization, 127), 5)
 
   val sequencerSystem = ActorSystem("sequencerSystem")
   val sequencerWatcher = sequencerSystem.actorOf(Props(classOf[SequencerWatcher], sequencer))
@@ -45,8 +49,8 @@ class Conductor extends Actor{
       sequencer.setSequence(sequence)
       sequencer.setTempoInBPM(120)// TODO variable tempo add GUI Fields
       track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, outNormalization, 127), 1))
-      track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, outNormalization, 127), 5))
-      currentNoteEndTick = 5
+      track.add(currentNoteEndMidiEvent)
+      kMMGUI.markovExtractor ! TransitionsRequest(currentState)
     }
     true
   }
@@ -54,7 +58,7 @@ class Conductor extends Actor{
   def startMelodyGeneration = {
     if (!started) {
       initializeSequencer
-      sequencer.setTickPosition(0)
+      //sequencer.setTickPosition(0)
       sequencer.start()
       started = true
     } else {
@@ -74,30 +78,37 @@ class Conductor extends Actor{
   def updateSequencerTick(tick: Long) = {
     notify("New Sequencer tick reached! " + tick)
     currentTick = tick
-    if (currentTick >= currentNoteEndTick - 1) getNextNote
-    else if (lastCoords._2 < lastNoteCoords._2) { // TODO improve to cut note only if more than control duration elapsed since last note started
-      currentNoteEndTick = tick + 1
-      track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, lastState._1 + outNormalization, 127), currentNoteEndTick))
-      getNextNote
+    if (currentTick >= currentNoteEndMidiEvent.getTick- 1) getNextNote
+    else if (currentCoords._1 < lastNoteCoords._1) {
+      val controlDurationIndex = (7 * currentCoords._1).round.toInt // Normalized to 8 possible durations
+      val controlDuration = durations(controlDurationIndex)
+      val currentNoteElapsed = currentTick - (currentNoteEndMidiEvent.getTick - currentState._2)
+      if (currentNoteElapsed > controlDuration) {
+        track.remove(currentNoteEndMidiEvent)
+        val currentNoteEndTick = currentTick + 1
+        currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, currentState._1 + outNormalization, 127), currentNoteEndTick)
+        track.add(currentNoteEndMidiEvent)
+        getNextNote
+      }
     }
   }
 
   def addNextNote(note: (Int, Int)) = {
+    val currentNoteEndTick = currentNoteEndMidiEvent.getTick
     track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, note._1 + outNormalization, 127), currentNoteEndTick + 1))
     val endTick = currentNoteEndTick + 1 + note._2
-    track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, note._1 + outNormalization, 127), endTick))
-    currentNoteEndTick = endTick
-    lastState = note
-    lastNoteCoords = lastCoords
+    currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, note._1 + outNormalization, 127), endTick)
+    track.add(currentNoteEndMidiEvent)
+    currentState = note
+    kMMGUI.markovExtractor ! TransitionsRequest(currentState)
+    lastNoteCoords = currentCoords
   }
 
   def getNextNote = {
-    implicit val timeout = Timeout(10 milliseconds)
-    val listFuture = kMMGUI.markovExtractor ? TransitionsRequest(lastState)
-    val transitions = Await.result(listFuture, timeout.duration).asInstanceOf[List[((Int, Int), Double)]] // Warning, synchronous request!
-    if (transitions.nonEmpty) {
-      val noteFuture = kMMGUI.controller ? CalcNoteOutputRequest(transitions, lastCoords._1, lastCoords._2)
-      val nextNote = Await.result(noteFuture, timeout.duration).asInstanceOf[(Int, Int)]
+    if (currentStateTransitions.nonEmpty) {
+      implicit val timeout = Timeout(20 milliseconds)
+      val noteFuture = kMMGUI.controller ? CalcNoteOutputRequest(currentStateTransitions, currentCoords._1, currentCoords._2)
+      val nextNote = Await.result(noteFuture, timeout.duration).asInstanceOf[(Int, Int)] // Warning, synchronous request!
       addNextNote(nextNote)
     }
     else {
@@ -129,8 +140,13 @@ class Conductor extends Actor{
 
   def receive: Receive = {
     case StartMelodyGenerationRequest => startMelodyGeneration
+    case StopMelodyGenerationRequest => stopMelodyGeneration
     case NewSequencerTick(tick: Long) => updateSequencerTick(tick)
-    case UpdateCoords(coords) => lastCoords = coords
+    case UpdateCoords(coords) => currentCoords = coords
+    case TransitionsList(list: List[((Int, Int), Double)]) => {
+      currentStateTransitions = list
+      notify("\nConductor received new transitions list!!!\n")
+    }
     //case NotifyNoteFinished => sendNextNote
     //case UpdateStatus(status: (Int, Int)) => lastState = status
     case _ ⇒ println("Conductor received unknown message")

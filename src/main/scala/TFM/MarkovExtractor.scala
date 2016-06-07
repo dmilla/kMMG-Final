@@ -3,7 +3,7 @@ package TFM
 import java.io.File
 import java.text.NumberFormat
 
-import TFM.CommProtocol.{HMMExtractionRequest, TransitionsRequest}
+import TFM.CommProtocol.{HMMExtractionRequest, TransitionsList, TransitionsRequest}
 import TFM.SplitToTuple._
 import akka.actor.Actor
 
@@ -111,7 +111,7 @@ class MarkovExtractor extends Actor{
 
 
   def receive = {
-    case TransitionsRequest(state: (Int, Int)) => sender ! markovChain.transitionsFor((normalizeNote(state._1), normalizeDuration(state._2)))
+    case TransitionsRequest(state: (Int, Int)) => sender ! TransitionsList(markovChain.transitionsFor((normalizeNote(state._1), normalizeDuration(state._2))))
     case HMMExtractionRequest(path) => extractMarkovChain(path)
     case _ ⇒ println("FeaturesExtractor received unknown message")
   }
