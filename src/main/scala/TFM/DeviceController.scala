@@ -2,7 +2,7 @@ package TFM
 
 import java.nio.{ByteBuffer, ByteOrder}
 
-import TFM.CommProtocol.{ConnectToDeviceRequest, UpdateCoords}
+import TFM.CommProtocol.{ConnectToDeviceRequest, UpdateCoords, UpdateForceVector}
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
 import akka.io.IO
 import akka.stream.actor.ActorPublisher
@@ -36,7 +36,10 @@ class DeviceController extends Actor{
   val ARM_LENGTH_2 = 30.0
 
   var initialCoords: (Short, Short) = (-1, -1)
-  var lastSensorValues: (Short, Short) = (-1, -1)
+  var currentCoords: (Double, Double) = (-1, -1)
+  var lastArmsAngles: (Float, Float) = (-1, -1)
+  val jacobian = Array.ofDim[Float](2,2)
+
 
  // val Delay = FiniteDuration(1000, MILLISECONDS)
 
@@ -45,6 +48,7 @@ class DeviceController extends Actor{
   val bytePublisherRef = system.actorOf(Props[BytePublisher])
   val bytePublisher = ActorPublisher[ByteString](bytePublisherRef)
 
+  var deviceTorque = ByteString(0.toByte, 0.toByte, 0.toByte, 0.toByte)
   var badResponses = 0
 
   def connectToDeviceStream(port: String) = {
@@ -62,12 +66,11 @@ class DeviceController extends Actor{
         badResponses = 0
         val shorts = convert(data.seq)
         if (shorts.size == 2) {
-          lastSensorValues = (shorts(0), shorts(1))
           notify("device says (shorts): " + shorts(0) + " / " + shorts(1))
           if (initialCoords ==(-1, -1)) initialCoords = (shorts(0), shorts(1))
           else getCoordinates((shorts(0), shorts(1)), initialCoords)
         }
-        bytePublisherRef ! Publish(ByteString(-0.toByte, 0.toByte, 0.toByte, 0.toByte)) // TODO - Send last calculated force
+        bytePublisherRef ! Publish(deviceTorque)
       } else {
         badResponses += 1
         notify("Less than 4 bytes received from device! Consecutive times: " + badResponses)
@@ -107,8 +110,10 @@ class DeviceController extends Actor{
   def getCoordinates(currentValues: (Short, Short), initialValues: (Short, Short)) = {
     val degAngle1 = 90.0f + (currentValues._1 - initialValues._1) / DEGREES_PER_STEP
     val degAngle2 = -(currentValues._2 - initialValues._2) / DEGREES_PER_STEP
-    val angle1 = Math.toRadians(degAngle1)
-    val angle2 = Math.toRadians(degAngle2)
+    val angle1: Float = Math.toRadians(degAngle1).toFloat
+    val angle2: Float = Math.toRadians(degAngle2).toFloat
+
+    lastArmsAngles = (angle1, angle2)
 
     // Those are the coordinates of the two axes (the ends of the first arms)
     // ARM_LENGHT_1 is the hypotenuse of the triangle formed by the coords
@@ -137,6 +142,17 @@ class DeviceController extends Actor{
     // Now we can know the absolute coordinates using that triangle
     val px = x1 + ARM_LENGTH_2 * Math.cos(alpha - theta)
     val py = y1 - ARM_LENGTH_2 * Math.sin(alpha - theta)
+    currentCoords = (px, py)
+
+    // Vector
+    // dx1
+    jacobian(0)(0) = (px + DISTANCE_FROM_CENTER_TO_MOTORS + ARM_LENGTH_1 * Math.cos(angle1)).toFloat
+    // dx2
+    jacobian(0)(1) = (px - DISTANCE_FROM_CENTER_TO_MOTORS - ARM_LENGTH_1 * Math.cos(angle2)).toFloat
+    // dy1
+    jacobian(1)(0) = (py + ARM_LENGTH_1 * Math.sin(angle1)).toFloat
+    // dy2
+    jacobian(1)(1) = (py + ARM_LENGTH_1 * Math.sin(angle2)).toFloat
 
     val normalizedCoords = normalizeCoords(px, py)
     notify("Coordinates calculated! X: " + px + " - Y: " + py + " // Normalized values: " + normalizedCoords)
@@ -158,15 +174,40 @@ class DeviceController extends Actor{
     else 0
   }
 
+  def calcVirtualForce(forceVector: (Float, Float)): ByteString = {
+    val ddd: Float = jacobian(0)(0) * jacobian(1)(1) - jacobian(0)(1) * jacobian(1)(0)
+
+    val d11: Float = ((currentCoords._1 + DISTANCE_FROM_CENTER_TO_MOTORS) * ARM_LENGTH_1 * Math.sin(lastArmsAngles._1) - currentCoords._1 * ARM_LENGTH_1 * Math.cos(lastArmsAngles._1)).toFloat
+    val d12: Float = 0.0f
+    val d21: Float = 0.0f
+    val d22: Float = (-(currentCoords._1 + DISTANCE_FROM_CENTER_TO_MOTORS) * ARM_LENGTH_1 * Math.sin(lastArmsAngles._2) - currentCoords._1 * ARM_LENGTH_1 * Math.cos(lastArmsAngles._2)).toFloat
+
+
+    var tau1: Float = (( jacobian(1)(1) * d11 - jacobian(0)(1) * d21) * forceVector._1 + ( jacobian(1)(1) * d12 - jacobian(0)(1) * d22) * forceVector._2) / ddd
+    var tau2: Float = ((-jacobian(1)(0) * d11 + jacobian(0)(0) + d21) * forceVector._1 + (-jacobian(1)(0) * d12 + jacobian(0)(0) * d22) * forceVector._2) / ddd
+
+    tau1 = Math.max(tau1, -20000.0f)
+    tau1 = Math.min(tau1, 20000.0f)
+
+    tau2 = Math.max(tau2, -20000.0f)
+    tau2 = Math.min(tau2, 20000.0f)
+
+    //out[0] = -tau1;
+    //out[1] = tau2;
+    val res = ByteString(shortToBytes((-tau1).toShort))
+    res ++ ByteString(shortToBytes(tau2.toShort))
+    deviceTorque = res
+    res
+  }
+
   def notify(msg: String) = kMMGUI.addOutput(msg)
 
-  def bytesToShort(byte1: Byte, byte2: Byte) : Short = {
-    ByteBuffer
-      .allocate(2)
-      .order(ByteOrder.LITTLE_ENDIAN)
-      .put(byte1)
-      .put(byte2)
-      .getShort(0)
+  def bytesToShort(byte1: Byte, byte2: Byte): Short = {
+    ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN).put(byte1).put(byte2).getShort(0)
+  }
+
+  def shortToBytes(short: Short): ByteBuffer = {
+    ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN).putShort(short)
   }
 
   def convert(in: IndexedSeq[Byte]): Array[Short] =
@@ -174,6 +215,7 @@ class DeviceController extends Actor{
 
   def receive: Receive = {
     case ConnectToDeviceRequest(port) => connectToDeviceStream(port)
+    case UpdateForceVector(forceVector: (Float, Float)) => calcVirtualForce(forceVector)
     /*case Serial.Received(data) => {
       println("Received data: " + data.toString)
     }

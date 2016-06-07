@@ -26,5 +26,6 @@ object CommProtocol {
   case class CheckSequencerTick()
   case class NewSequencerTick(tick: Long)
   case class TransitionsList(list: List[((Int, Int), Double)])
+  case class UpdateForceVector(forceVector: (Float, Float))
 
 }

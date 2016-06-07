@@ -16,7 +16,7 @@ import scala.concurrent.Await
   * Created by diego on 31/05/16.
   */
 
-
+// TODO - add option to save midi track
 class Conductor extends Actor{
 
   val durations = List(1, 2, 3, 4, 6, 8, 12, 16)

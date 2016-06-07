@@ -39,6 +39,11 @@ class UI extends MainFrame {
   notesDirField.peer.setMaximumSize(textFieldSize)
   notesDirField.editable = false
 
+  val xForceField = new TextField { text = "10" }
+  xForceField.peer.setMaximumSize(numberFieldSize)
+  val yForceField = new TextField { text = "10" }
+  yForceField.peer.setMaximumSize(numberFieldSize)
+
   //TODO - USE FormattedTextFields to avoid bad entries in number fields
   val integerFieldFormatter = NumberFormat.getIntegerInstance()
 
@@ -64,6 +69,20 @@ class UI extends MainFrame {
       contents += Swing.HStrut(260)
       contents += Button("Ver Gráfico Joystick") {
         joystickChart ! SetVisible
+      }
+    }
+    contents += new BoxPanel(Orientation.Horizontal) {
+      val label = new Label("Vector de fuerza - X: ")
+      contents += label
+      contents += Swing.HStrut(5)
+      contents += xForceField
+      contents += Swing.HStrut(5)
+      contents += new Label(" - Y: ")
+      contents += Swing.HStrut(5)
+      contents += yForceField
+      contents += Swing.HStrut(5)
+      contents += Button("Probar") {
+        controller ! UpdateForceVector((xForceField.text.toFloat, yForceField.text.toFloat))
       }
     }
     contents += Button("Generar Melodía") {
