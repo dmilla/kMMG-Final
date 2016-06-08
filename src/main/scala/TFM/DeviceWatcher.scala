@@ -9,7 +9,6 @@ import akka.io.IO
 import com.github.jodersky.flow.Serial
 
 
-
 class DeviceWatcher extends Actor with ActorLogging {
   import context._
 
@@ -21,7 +20,7 @@ class DeviceWatcher extends Actor with ActorLogging {
   )
 
   override def preStart() = {
-    val cmd = Serial.Watch("/dev", true)
+    val cmd = Serial.Watch("/dev")
     IO(Serial) ! cmd //watch for new devices
     //notify(s"Watching ${cmd.directory} for new devices.")
     log.info(s"Watching ${cmd.directory} for new devices.")

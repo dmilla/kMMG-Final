@@ -11,7 +11,7 @@ import akka.actor.{ActorSystem, Props}
 
 import scala.swing._
 
-
+// TODO - add and improve web miner
 class UI extends MainFrame {
 
   title = "Controlled Markov Melody Generator - Diego Milla - TFM - Máster SSII - USAL"
@@ -21,7 +21,7 @@ class UI extends MainFrame {
   val watcher = controlSystem.actorOf(Props(classOf[DeviceWatcher]))
   val deviceController = controlSystem.actorOf(Props(classOf[DeviceController]))
   val markovExtractor = controlSystem.actorOf(Props(classOf[MarkovExtractor]))
-  val controller = controlSystem.actorOf(Props(classOf[KController]))
+  val kController = controlSystem.actorOf(Props(classOf[KController]))
   val conductor = controlSystem.actorOf(Props[Conductor])
   val joystickChart = controlSystem.actorOf(Props[JoystickChart])
 
@@ -82,7 +82,7 @@ class UI extends MainFrame {
       contents += yForceField
       contents += Swing.HStrut(5)
       contents += Button("Probar") {
-        controller ! UpdateForceVector((xForceField.text.toFloat, yForceField.text.toFloat))
+        deviceController ! UpdateForceVector((xForceField.text.toFloat, yForceField.text.toFloat))
       }
     }
     contents += Button("Generar Melodía") {

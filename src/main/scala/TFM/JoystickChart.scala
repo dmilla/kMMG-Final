@@ -15,6 +15,8 @@ import org.jfree.data.xy.{XYDataset, XYSeries, XYSeriesCollection}
 
 import scala.swing._
 
+// TODO - add background color to chart
+// TODO - add control notes and durations histogram
 class JoystickChart extends JFrame with Actor{
 
   var manualControl: Boolean = true //TODO - add possibility of changing control type from GUI

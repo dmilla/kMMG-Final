@@ -5,18 +5,24 @@ import akka.stream.actor.ActorPublisherMessage.{Cancel, Request}
 import akka.util.ByteString
 
 import scala.collection.mutable
+import scala.concurrent.duration._
+
+import scala.concurrent.ExecutionContext.Implicits.global
+
 
 /**
   * Created by root on 27/05/16.
   */
 class BytePublisher extends ActorPublisher[ByteString] {
   var queue: mutable.Queue[ByteString] = mutable.Queue()
+  var tickChecker = kMMGUI.controlSystem.scheduler.schedule(10 milliseconds, 10 milliseconds)(publishIfNeeded())
 
   def receive = {
     case Publish(b: ByteString) =>
-      if (queue.isEmpty) queue.enqueue(b)
+      if (queue.isEmpty && b.size == 4) queue.enqueue(b)
+      else if (queue.isEmpty) queue.enqueue(ByteString(0.toByte, 0.toByte, 0.toByte, 0.toByte))
       else notify("BytePublisher received another request but queue is already full")
-      publishIfNeeded()
+      //publishIfNeeded()
     case Request(cnt) =>
       publishIfNeeded()
     case Cancel => context.stop(self)
@@ -25,6 +31,7 @@ class BytePublisher extends ActorPublisher[ByteString] {
 
   def publishIfNeeded() = {
     while (queue.nonEmpty && isActive && totalDemand > 0) {
+      notify("\nforce sent! " + queue(0) + "\n")
       onNext(queue.dequeue())
     }
   }

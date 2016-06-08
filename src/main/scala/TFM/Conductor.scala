@@ -107,7 +107,7 @@ class Conductor extends Actor{
   def getNextNote = {
     if (currentStateTransitions.nonEmpty) {
       implicit val timeout = Timeout(20 milliseconds)
-      val noteFuture = kMMGUI.controller ? CalcNoteOutputRequest(currentStateTransitions, currentCoords._1, currentCoords._2)
+      val noteFuture = kMMGUI.kController ? CalcNoteOutputRequest(currentStateTransitions, currentCoords._1, currentCoords._2)
       val nextNote = Await.result(noteFuture, timeout.duration).asInstanceOf[(Int, Int)] // Warning, synchronous request!
       addNextNote(nextNote)
     }
