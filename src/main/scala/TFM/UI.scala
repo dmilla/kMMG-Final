@@ -12,6 +12,8 @@ import akka.actor.{ActorSystem, Props}
 import scala.swing._
 
 // TODO - add and improve web miner
+// TODO - add sequencer like UI
+// TODO - only show start/stop melody buttons if model generated previously
 class UI extends MainFrame {
 
   title = "Controlled Markov Melody Generator - Diego Milla - TFM - Máster SSII - USAL"

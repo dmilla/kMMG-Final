@@ -26,7 +26,7 @@ class DeviceWatcher extends Actor with ActorLogging {
     log.info(s"Watching ${cmd.directory} for new devices.")
   }
 
-  //def notify(msg: String) = kMMGUI.addOutput(msg)
+  def notify(msg: String) = kMMGUI.addOutput(msg)
 
   def receive = {
 

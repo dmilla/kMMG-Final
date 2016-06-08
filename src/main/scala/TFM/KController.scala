@@ -30,7 +30,7 @@ class KController extends Actor{
     //kMMGUI.conductor ! UpdateStatus(out)
     notify("Nota de salida calculada: " + out + " - Se reproducirá una nota normalizada 36 notas por encima")
     //kMMGUI.midiSender ! SendMidiNoteRequest((out._1 + 36, out._2))
-    //ui.midiSender ! SendMidiNoteRequest((out + 48,  1)) //TODO normalize output as well
+    //ui.midiSender ! SendMidiNoteRequest((out + 48,  1)) //TODO normalize output GUI setting
     //kMMGUI.updateState(out)
     out
   }

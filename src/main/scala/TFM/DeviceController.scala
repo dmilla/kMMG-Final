@@ -153,7 +153,7 @@ class DeviceController extends Actor{
     kMMGUI.joystickChart ! UpdateCoords(normalizedCoords)
   }
 
-  //TODO verify X axis is between -48/48
+  //TODO verify X axis is between -48/48 and reduce total output (corners can't be reached!)
   //This method normalizes coords between 0 and 1
   def normalizeCoords(x: Double, y: Double): (Double, Double) = {
     val normX = (x + 48)/96 // Device X axis is between -48 and 48

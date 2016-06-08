@@ -117,25 +117,6 @@ class Conductor extends Actor{
     }
   }
 
-  /*def sendNextNote = {
-    val coords = getLastCoords
-    implicit val timeout = Timeout(2 seconds)
-    val transitions: Future[List[(Int, Double)]] = ask(kMMGUI.markovExtractor, TransitionsRequest(lastState)).mapTo[List[(Int, Double)]]
-    transitions.onSuccess{
-      case list: List[((Int, Int), Double)] =>
-        if (list.nonEmpty) kMMGUI.controller ! CalcNoteOutputRequest(list, coords._1, coords._2)
-        else notify("Error while trying to get Markov Transitions, please generate model first")
-    }
-  }
-
-  def getLastCoords = {
-    (JoystickChart.lastX, JoystickChart.lastY)
-  }*/
-
-  /*def addMetaEventListener(listener: MetaEventListener): Boolean = false
-
-  def getMaxReceivers: Int = -1*/
-
   def notify(msg: String) = kMMGUI.addOutput(msg)
 
   def receive: Receive = {
@@ -147,9 +128,26 @@ class Conductor extends Actor{
       currentStateTransitions = list
       notify("\nConductor received new transitions list!!!\n")
     }
-    //case NotifyNoteFinished => sendNextNote
-    //case UpdateStatus(status: (Int, Int)) => lastState = status
     case _ ⇒ println("Conductor received unknown message")
   }
+
+  /*CONNECT TO CUSTOM MIDI DEVICE
+  val devices = MidiSystem.getMidiDeviceInfo().map(MidiSystem.getMidiDevice)
+
+  // Print and choose one device which you want to use.
+  devices.zipWithIndex.foreach { case (d, i) => println(s"${i} ${d.getDeviceInfo} (${d.getClass.getSimpleName})") }
+
+  val dev = devices(0)
+
+  dev.open()
+  val rcvr = dev.getReceiver()
+
+  val msg = new ShortMessage
+  msg.setMessage(NOTE_ON, 0, 60, 93)
+
+  rcvr.send(msg, -1)
+
+  dev.close()
+   */
 
 }
