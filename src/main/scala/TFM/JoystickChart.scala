@@ -8,7 +8,7 @@ import java.awt.geom.Rectangle2D
 import java.awt.{BasicStroke, Color}
 import javax.swing.{JFrame, JPanel}
 
-import TFM.CommProtocol.{SetVisible, UpdateCoords}
+import TFM.CommProtocol.{ChartPanelRef, SetVisible, UpdateCoords}
 import akka.actor.Actor
 import org.jfree.chart._
 import org.jfree.chart.annotations.XYShapeAnnotation
@@ -28,7 +28,8 @@ class JoystickChart extends JFrame with Actor{
   var lastY: Double = 0.5
 
   setTitle("Joystick Position")
-  setSize(new Dimension(700, 450))
+  setSize(new Dimension(700, 500))
+  setLocation(900, 0)
   val parentPanel = new JPanel()
   val chartPanel = createChartPanel
   chartPanel.setDomainZoomable(false)
@@ -124,8 +125,9 @@ class JoystickChart extends JFrame with Actor{
 
   def receive: Receive = {
     case SetVisible => setVisible(true)
+    case ChartPanelRef(chartPanel: ChartPanel) => parentPanel.add(chartPanel)
     case UpdateCoords(coords) => if(!manualControl) refreshChart(coords)
-    case _ ⇒ println("InputController received unknown message")
+    case _ ⇒ println("JoystickChart received unknown message")
   }
 
 }

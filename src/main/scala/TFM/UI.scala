@@ -7,8 +7,14 @@ import java.io.File
 import java.text.NumberFormat
 
 import TFM.CommProtocol._
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{Actor, ActorSystem, Props}
+import akka.util.Timeout
+import akka.pattern.ask
+import org.jfree.chart.ChartPanel
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 import scala.swing._
 
 // TODO - add and improve web miner
@@ -26,13 +32,15 @@ class UI extends MainFrame {
   val kController = controlSystem.actorOf(Props(classOf[KController]))
   val conductor = controlSystem.actorOf(Props[Conductor])
   val joystickChart = controlSystem.actorOf(Props[JoystickChart])
+  val historyChart = controlSystem.actorOf(Props[HistoryChart])
+  //historyChart ! ChartPanelRequest(joystickChart)
 
   val textFieldSize = new Dimension(360, 25)
   val labelSize = new Dimension(300, 25)
   val numberFieldSize = new Dimension(60, 25)
 
   val outputField = new TextArea { rows = 26; lineWrap = true; wordWrap = true; editable = false }
-  val defaultPathFile = new File(System.getProperty("user.home") + "/MidiWebMiner/notes with duration/Piano") // TODO inicializar directorio en carpeta general
+  val defaultPathFile = new File(System.getProperty("user.home") + "/MidiWebMiner/notes with duration/Pipe") // TODO inicializar directorio en carpeta general
   //defaultPathFile.mkdirs
   val notesDirChooser = new FileChooser(defaultPathFile)
   val notesDirField = new TextField( defaultPathFile.getAbsolutePath )
@@ -70,6 +78,7 @@ class UI extends MainFrame {
       }
       contents += Swing.HStrut(260)
       contents += Button("Ver Gráfico Joystick") {
+        historyChart ! SetVisible
         joystickChart ! SetVisible
       }
     }

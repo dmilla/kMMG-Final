@@ -2,6 +2,9 @@ package TFM
 
 import java.io.File
 
+import akka.actor.ActorRef
+import org.jfree.chart.ChartPanel
+
 /**
   * Created by diego on 30/03/16.
   * */
@@ -27,5 +30,10 @@ object CommProtocol {
   case class NewSequencerTick(tick: Long)
   case class TransitionsList(list: List[((Int, Int), Double)])
   case class UpdateForceVector(forceVector: (Float, Float))
+  case class ChartPanelRequest(actorRef: ActorRef)
+  case class ChartPanelRef(chartPanel: ChartPanel)
+  case class UpdateHistogram(controlNote: Int, controlDuration: Int, tick: Long)
+  case class DrawNote(tick: Long, note: Int, duration: Int)
+  case class DrawNoteCut(tick: Long, note: Int)
 
 }

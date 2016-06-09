@@ -37,7 +37,7 @@ class Conductor extends Actor{
 
   var currentTick: Long = 0
   //var currentNoteEndTick: Long = 0
-  var currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, outNormalization, 127), 5)
+  var currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, 12 + outNormalization, 127), 5)
 
   val sequencerSystem = ActorSystem("sequencerSystem")
   val sequencerWatcher = sequencerSystem.actorOf(Props(classOf[SequencerWatcher], sequencer))
@@ -48,7 +48,7 @@ class Conductor extends Actor{
       sequencer.open()
       sequencer.setSequence(sequence)
       sequencer.setTempoInBPM(120)// TODO variable tempo add GUI Fields
-      track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, outNormalization, 127), 1))
+      track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, 12 + outNormalization, 127), 1))
       track.add(currentNoteEndMidiEvent)
       kMMGUI.markovExtractor ! TransitionsRequest(currentState)
     }
@@ -78,16 +78,15 @@ class Conductor extends Actor{
   def updateSequencerTick(tick: Long) = {
     notify("New Sequencer tick reached! " + tick)
     currentTick = tick
+    val controlDurationIndex = (7 * currentCoords._1).round.toInt // Normalized to 8 possible durations
+    val controlDuration = durations(controlDurationIndex)
+    val controlNote = (23 * currentCoords._2).round.toInt
+    kMMGUI.historyChart ! UpdateHistogram(controlNote, controlDuration, currentTick)
     if (currentTick >= currentNoteEndMidiEvent.getTick- 1) getNextNote
     else if (currentCoords._1 < lastNoteCoords._1) {
-      val controlDurationIndex = (7 * currentCoords._1).round.toInt // Normalized to 8 possible durations
-      val controlDuration = durations(controlDurationIndex)
       val currentNoteElapsed = currentTick - (currentNoteEndMidiEvent.getTick - currentState._2)
       if (currentNoteElapsed > controlDuration) {
-        track.remove(currentNoteEndMidiEvent)
-        val currentNoteEndTick = currentTick + 1
-        currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, currentState._1 + outNormalization, 127), currentNoteEndTick)
-        track.add(currentNoteEndMidiEvent)
+        cutCurrentNote
         getNextNote
       }
     }
@@ -95,13 +94,22 @@ class Conductor extends Actor{
 
   def addNextNote(note: (Int, Int)) = {
     val currentNoteEndTick = currentNoteEndMidiEvent.getTick
-    track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, note._1 + outNormalization, 127), currentNoteEndTick + 1))
-    val endTick = currentNoteEndTick + 1 + note._2
+    track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, note._1 + outNormalization, 127), currentNoteEndTick))
+    val endTick = currentNoteEndTick + note._2
     currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, note._1 + outNormalization, 127), endTick)
     track.add(currentNoteEndMidiEvent)
     currentState = note
+    kMMGUI.historyChart ! DrawNote(currentNoteEndTick, note._1, note._2)
     kMMGUI.markovExtractor ! TransitionsRequest(currentState)
     lastNoteCoords = currentCoords
+  }
+
+  def cutCurrentNote = {
+    track.remove(currentNoteEndMidiEvent)
+    val currentNoteEndTick = currentTick + 1
+    currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, currentState._1 + outNormalization, 127), currentNoteEndTick)
+    track.add(currentNoteEndMidiEvent)
+    kMMGUI.historyChart ! DrawNoteCut(currentNoteEndTick, currentState._1)
   }
 
   def getNextNote = {
