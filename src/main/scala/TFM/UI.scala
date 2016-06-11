@@ -93,7 +93,7 @@ class UI extends MainFrame {
       contents += yForceField
       contents += Swing.HStrut(5)
       contents += Button("Probar") {
-        deviceController ! UpdateForceVector((xForceField.text.toFloat, yForceField.text.toFloat))
+        deviceController ! UpdateFeedbackForce((xForceField.text.toFloat, yForceField.text.toFloat))
       }
     }
     contents += Button("Generar Melodía") {

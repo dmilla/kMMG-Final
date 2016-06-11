@@ -2,7 +2,7 @@ package TFM
 
 import java.nio.{ByteBuffer, ByteOrder}
 
-import TFM.CommProtocol.{ConnectToDeviceRequest, UpdateCoords, UpdateForceVector}
+import TFM.CommProtocol.{ConnectToDeviceRequest, UpdateCoords, UpdateFeedbackForce}
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
 import akka.io.IO
 import akka.stream.actor.ActorPublisher
@@ -202,7 +202,7 @@ class DeviceController extends Actor{
 
   def receive: Receive = {
     case ConnectToDeviceRequest(port) => connectToDeviceStream(port)
-    case UpdateForceVector(forceVector: (Float, Float)) => calcVirtualForce(forceVector)
+    case UpdateFeedbackForce(forceVector: (Float, Float)) => calcVirtualForce(forceVector)
     /*case Serial.Received(data) => {
       println("Received data: " + data.toString)
     }

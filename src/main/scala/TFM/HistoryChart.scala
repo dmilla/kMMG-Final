@@ -9,10 +9,9 @@ import TFM.CommProtocol._
 import akka.actor.{Actor, ActorRef}
 import org.jfree.chart.annotations.XYShapeAnnotation
 import org.jfree.chart.axis.{AxisLocation, NumberAxis, NumberTickUnit}
-import org.jfree.chart.plot.{CombinedDomainXYPlot, IntervalMarker, PlotOrientation, XYPlot}
+import org.jfree.chart.plot.XYPlot
 import org.jfree.chart.renderer.xy.StandardXYItemRenderer
-import org.jfree.chart.{ChartFactory, ChartPanel, JFreeChart}
-import org.jfree.data.time.Millisecond
+import org.jfree.chart.{ChartPanel, JFreeChart}
 import org.jfree.data.xy.{XYSeries, XYSeriesCollection}
 import org.jfree.ui.Layer
 

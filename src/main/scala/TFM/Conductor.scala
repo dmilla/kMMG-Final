@@ -90,6 +90,30 @@ class Conductor extends Actor{
         getNextNote
       }
     }
+    else updateFeedbackForce(controlNote, controlDuration)
+  }
+
+  def updateFeedbackForce(controlNote: Int, controlDuration: Int) = {
+    var lowNearestNote = (0, 0.0)
+    var highNearestNote = (23, 0.0)
+    var shortNearestDuration = (1, 0.0)
+    var longNearestDuration = (16, 0.0)
+    currentStateTransitions.foreach{
+      case prob: ((Int, Int), Double) =>
+        val note = prob._1._1
+        val duration = prob._1._2
+        val noteDistance = note - controlNote
+        val durationDistance = duration - controlDuration
+        if (noteDistance < 0 && noteDistance <= lowNearestNote._1 - controlNote) lowNearestNote = (note, prob._2)
+        if (noteDistance > 0 && noteDistance <= highNearestNote._1 - controlNote) highNearestNote = (note, prob._2)
+        if (durationDistance < 0 && durationDistance <= shortNearestDuration._1 - controlDuration) shortNearestDuration = (duration, prob._2)
+        if (durationDistance > 0 && durationDistance <= longNearestDuration._1) longNearestDuration = (duration, prob._2)
+    }
+    //TODO @ LAB - verify force feedback direction and scaling
+    val scaling = 100
+    val xVector: Float = (shortNearestDuration._2 - longNearestDuration._2).toFloat * scaling
+    val yVector: Float = (lowNearestNote._2 - highNearestNote._2).toFloat * scaling
+    kMMGUI.deviceController ! UpdateFeedbackForce((xVector, yVector))
   }
 
   def addNextNote(note: (Int, Int)) = {
