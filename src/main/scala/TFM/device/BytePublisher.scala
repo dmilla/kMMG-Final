@@ -1,13 +1,13 @@
-package TFM
+package TFM.device
 
+import TFM.kMarkovMelodyGenerator.kMMGUI
 import akka.stream.actor.ActorPublisher
 import akka.stream.actor.ActorPublisherMessage.{Cancel, Request}
 import akka.util.ByteString
 
 import scala.collection.mutable
-import scala.concurrent.duration._
-
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 
 /**

@@ -1,9 +1,10 @@
-package TFM
+package TFM.device
 
 /**
   * Created by diego on 20/05/16.
   */
 import TFM.CommProtocol.ConnectToDeviceRequest
+import TFM.kMarkovMelodyGenerator.kMMGUI
 import akka.actor.{Actor, ActorLogging}
 import akka.io.IO
 import com.github.jodersky.flow.Serial

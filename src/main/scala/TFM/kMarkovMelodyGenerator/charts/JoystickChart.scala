@@ -1,4 +1,4 @@
-package TFM
+package TFM.kMarkovMelodyGenerator.charts
 
 /**
   * Created by diego on 30/05/16.
@@ -9,6 +9,7 @@ import java.awt.{BasicStroke, Color}
 import javax.swing.{JFrame, JPanel}
 
 import TFM.CommProtocol.{ChartPanelRef, SetVisible, UpdateCoords}
+import TFM.kMarkovMelodyGenerator.kMMGUI
 import akka.actor.Actor
 import org.jfree.chart._
 import org.jfree.chart.annotations.XYShapeAnnotation
@@ -18,7 +19,7 @@ import org.jfree.ui.Layer
 
 import scala.swing._
 
-// TODO - add background color to chart???
+// TODO - add background color to chart with existing transitions???
 class JoystickChart extends JFrame with Actor{
 
   var manualControl: Boolean = true //TODO - add possibility of changing control type from GUI
@@ -79,15 +80,6 @@ class JoystickChart extends JFrame with Actor{
     target.setLabel("Target Domain")
     //xyPlot.addDomainMarker(target, Layer.BACKGROUND)
     //xyPlot.addRangeMarker(target, Layer.BACKGROUND)
-    xyPlot.getRenderer.addAnnotation(
-      new XYShapeAnnotation(
-        new Rectangle2D.Double(0.2, 0.595, 0.04, 0.01),
-        new BasicStroke(1.0f),
-        Color.yellow,
-        Color.yellow
-      ),
-      Layer.BACKGROUND
-    )
     range.setRange(0.0, 1.0)
     //range.setTickUnit(new NumberTickUnit(0.1));
     new ChartPanel(jfreechart)

@@ -1,8 +1,8 @@
-package TFM
+package TFM.kMarkovMelodyGenerator
 
 import java.text.DecimalFormat
 
-import TFM.CommProtocol.{CalcNoteOutputRequest, UpdateCoords, SendMidiNoteRequest, UpdateStatus}
+import TFM.CommProtocol.CalcNoteOutputRequest
 import akka.actor.Actor
 
 /**

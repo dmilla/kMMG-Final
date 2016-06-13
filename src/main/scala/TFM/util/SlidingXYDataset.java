@@ -1,4 +1,4 @@
-package TFM;
+package TFM.util;
 
 import org.jfree.data.Range;
 import org.jfree.data.general.DatasetChangeEvent;

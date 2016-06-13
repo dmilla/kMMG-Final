@@ -1,4 +1,4 @@
-package TFM
+package TFM.kMarkovMelodyGenerator
 
 /**
   * Created by diego on 5/05/16.

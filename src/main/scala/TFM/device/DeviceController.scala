@@ -1,21 +1,19 @@
-package TFM
+package TFM.device
 
 import java.nio.{ByteBuffer, ByteOrder}
 
 import TFM.CommProtocol.{ConnectToDeviceRequest, UpdateCoords, UpdateFeedbackForce}
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
-import akka.io.IO
+import TFM.kMarkovMelodyGenerator.kMMGUI
+import akka.actor.{Actor, Props}
+import akka.stream.ActorMaterializer
 import akka.stream.actor.ActorPublisher
-import akka.stream.{ActorMaterializer, Inlet}
 import akka.stream.scaladsl._
 import akka.util.ByteString
 import com.github.jodersky.flow.{Parity, SerialSettings}
 import com.github.jodersky.flow.stream.Serial
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.util.{Failure, Success}
-import com.github.jodersky.flow.{AccessDeniedException, SerialSettings}
 
 /**
   * Created by diego on 9/05/16.

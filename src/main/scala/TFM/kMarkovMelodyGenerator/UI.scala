@@ -1,4 +1,4 @@
-package TFM
+package TFM.kMarkovMelodyGenerator
 
 /**
   * Created by diego on 05/05/16.
@@ -7,23 +7,24 @@ import java.io.File
 import java.text.NumberFormat
 
 import TFM.CommProtocol._
-import akka.actor.{Actor, ActorSystem, Props}
-import akka.util.Timeout
-import akka.pattern.ask
-import org.jfree.chart.ChartPanel
+import TFM.MidiWebMiner.WebMinerUI
+import TFM.device.{DeviceController, DeviceWatcher}
+import TFM.util.MarkovExtractor
+import TFM.kMarkovMelodyGenerator.charts.{HistoryChart, JoystickChart}
+import akka.actor.{ActorSystem, Props}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration._
 import scala.swing._
 
-// TODO - add and improve web miner
+// TODO - improve web miner + integrate it (directories etc)
 // TODO - add sequencer like UI
-// TODO - only show start/stop melody buttons if model generated previously
+// TODO - only show start/stop melody buttons if model generated previously => BEST POSSIBLE UX!
+// TODO - add playback program change setting
 class UI extends MainFrame {
 
   title = "Controlled Markov Melody Generator - Diego Milla - TFM - Máster SSII - USAL"
   preferredSize = new Dimension(1500, 1000)
+
+  val midiWebMiner = new WebMinerUI
 
   val controlSystem = ActorSystem("controlSystem")
   val watcher = controlSystem.actorOf(Props(classOf[DeviceWatcher]))
@@ -33,7 +34,6 @@ class UI extends MainFrame {
   val conductor = controlSystem.actorOf(Props[Conductor])
   val joystickChart = controlSystem.actorOf(Props[JoystickChart])
   val historyChart = controlSystem.actorOf(Props[HistoryChart])
-  //historyChart ! ChartPanelRequest(joystickChart)
 
   val textFieldSize = new Dimension(360, 25)
   val labelSize = new Dimension(300, 25)
@@ -77,10 +77,13 @@ class UI extends MainFrame {
         markovExtractor ! HMMExtractionRequest(notesDirField.text)
       }
       contents += Swing.HStrut(260)
-      contents += Button("Ver Gráfico Joystick") {
+      contents += Button("Ver Gráficos") {
         historyChart ! SetVisible
         joystickChart ! SetVisible
       }
+    }
+    contents += Button("Midi Web Miner") {
+      midiWebMiner.open
     }
     contents += new BoxPanel(Orientation.Horizontal) {
       val label = new Label("Vector de fuerza - X: ")
@@ -117,7 +120,6 @@ class UI extends MainFrame {
     outputField.append(out + "\n")
     outputField.peer.setCaretPosition(outputField.peer.getDocument.getLength)
   }
-
 
 }
 

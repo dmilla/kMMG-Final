@@ -1,4 +1,4 @@
-package TFM
+package TFM.kMarkovMelodyGenerator
 
 import javax.sound.midi._
 
@@ -7,9 +7,9 @@ import akka.actor.{Actor, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import scala.concurrent.Await
 
 
 /**

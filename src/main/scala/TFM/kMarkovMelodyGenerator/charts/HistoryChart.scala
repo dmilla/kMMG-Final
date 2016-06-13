@@ -1,11 +1,12 @@
-package TFM
+package TFM.kMarkovMelodyGenerator.charts
 
-import java.awt.{BasicStroke, BorderLayout, Color, Dimension}
 import java.awt.geom.Rectangle2D
+import java.awt.{BasicStroke, BorderLayout, Color, Dimension}
 import javax.swing.event.{ChangeEvent, ChangeListener}
 import javax.swing.{JFrame, JPanel, JSlider}
 
 import TFM.CommProtocol._
+import TFM.util.SlidingXYDataset
 import akka.actor.{Actor, ActorRef}
 import org.jfree.chart.annotations.XYShapeAnnotation
 import org.jfree.chart.axis.{AxisLocation, NumberAxis, NumberTickUnit}
@@ -20,7 +21,7 @@ import org.jfree.ui.Layer
   */
 class HistoryChart extends JFrame with Actor with ChangeListener{
 
-  setTitle("Control History")
+  setTitle("Control Histogram")
   setSize(new Dimension(1200, 400))
   setLocation(300, 550)
   val parentPanel = new JPanel(new BorderLayout())

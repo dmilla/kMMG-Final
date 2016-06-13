@@ -1,4 +1,4 @@
-package TFM
+package TFM.kMarkovMelodyGenerator
 
 /**
   * Created by diego on 6/06/16.
@@ -7,7 +7,7 @@ package TFM
 import javax.sound.midi._
 
 import TFM.CommProtocol._
-import akka.actor.{Actor, ActorSystem, Cancellable}
+import akka.actor.Actor
 
 class SequencerWatcher(sequencer: Sequencer) extends Actor{
 

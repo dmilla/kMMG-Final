@@ -1,10 +1,11 @@
-package TFM
+package TFM.util
 
 import java.io.File
 import java.text.NumberFormat
 
 import TFM.CommProtocol.{HMMExtractionRequest, TransitionsList, TransitionsRequest}
-import TFM.SplitToTuple._
+import TFM.kMarkovMelodyGenerator.kMMGUI
+import TFM.util.SplitToTuple._
 import akka.actor.Actor
 
 import scala.collection.mutable.ArrayBuffer
