@@ -55,7 +55,7 @@ class Conductor extends Actor{
     true
   }
 
-  def startMelodyGeneration = {
+  def startMelodyGeneration() = {
     if (!started) {
       initializeSequencer
       //sequencer.setTickPosition(0)
@@ -66,7 +66,7 @@ class Conductor extends Actor{
     }
   }
 
-  def stopMelodyGeneration = {
+  def stopMelodyGeneration() = {
     if (started) {
       sequencer.stop()
       started = false
@@ -82,12 +82,12 @@ class Conductor extends Actor{
     val controlDuration = durations(controlDurationIndex)
     val controlNote = (23 * currentCoords._2).round.toInt
     kMMGUI.historyChart ! UpdateHistogram(controlNote, controlDuration, currentTick)
-    if (currentTick >= currentNoteEndMidiEvent.getTick- 1) getNextNote
+    if (currentTick >= currentNoteEndMidiEvent.getTick- 1) requestNextNote()
     else if (currentCoords._1 < lastNoteCoords._1) {
       val currentNoteElapsed = currentTick - (currentNoteEndMidiEvent.getTick - currentState._2)
       if (currentNoteElapsed > controlDuration) {
-        cutCurrentNote
-        getNextNote
+        cutCurrentNote()
+        requestNextNote()
       }
     }
     else updateFeedbackForce(controlNote, controlDuration)
@@ -128,7 +128,7 @@ class Conductor extends Actor{
     lastNoteCoords = currentCoords
   }
 
-  def cutCurrentNote = {
+  def cutCurrentNote() = {
     track.remove(currentNoteEndMidiEvent)
     val currentNoteEndTick = currentTick + 1
     currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, currentState._1 + outNormalization, 127), currentNoteEndTick)
@@ -136,7 +136,7 @@ class Conductor extends Actor{
     kMMGUI.historyChart ! DrawNoteCut(currentNoteEndTick, currentState._1)
   }
 
-  def getNextNote = {
+  def requestNextNote() = {
     if (currentStateTransitions.nonEmpty) {
       implicit val timeout = Timeout(20 milliseconds)
       val noteFuture = kMMGUI.kController ? CalcNoteOutputRequest(currentStateTransitions, currentCoords._1, currentCoords._2)
@@ -144,22 +144,22 @@ class Conductor extends Actor{
       addNextNote(nextNote)
     }
     else {
-      stopMelodyGeneration
+      stopMelodyGeneration()
       notify("Error while trying to get Markov Transitions, please generate model first. Melody generation has been stopped.")
     }
   }
 
   def notify(msg: String) = kMMGUI.addOutput(msg)
 
-  def receive: Receive = {
-    case StartMelodyGenerationRequest => startMelodyGeneration
-    case StopMelodyGenerationRequest => stopMelodyGeneration
+  def receive() = {
+    case StartMelodyGenerationRequest => startMelodyGeneration()
+    case StopMelodyGenerationRequest => stopMelodyGeneration()
     case NewSequencerTick(tick: Long) => updateSequencerTick(tick)
     case UpdateCoords(coords) => currentCoords = coords
-    case TransitionsList(list: List[((Int, Int), Double)]) => {
+    case TransitionsList(list: List[((Int, Int), Double)]) =>
+      kMMGUI.joystickChart ! TransitionsList(list)
       currentStateTransitions = list
       notify("\nConductor received new transitions list!!!\n")
-    }
     case _ ⇒ println("Conductor received unknown message")
   }
 

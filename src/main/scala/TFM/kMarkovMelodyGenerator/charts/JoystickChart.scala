@@ -8,7 +8,7 @@ import java.awt.geom.Rectangle2D
 import java.awt.{BasicStroke, Color}
 import javax.swing.{JFrame, JPanel}
 
-import TFM.CommProtocol.{ChartPanelRef, SetVisible, UpdateCoords}
+import TFM.CommProtocol.{ChartPanelRef, SetVisible, TransitionsList, UpdateCoords}
 import TFM.kMarkovMelodyGenerator.kMMGUI
 import akka.actor.Actor
 import org.jfree.chart._
@@ -17,15 +17,18 @@ import org.jfree.chart.plot.{IntervalMarker, PlotOrientation, XYPlot}
 import org.jfree.data.xy.{XYDataset, XYSeries, XYSeriesCollection}
 import org.jfree.ui.Layer
 
+import scala.collection.mutable.ListBuffer
 import scala.swing._
 
-// TODO - add background color to chart with existing transitions-- PRIORITARY
 class JoystickChart extends JFrame with Actor{
 
   var manualControl: Boolean = true //TODO - add possibility of changing control type from GUI
 
   var lastX: Double = 0.5
   var lastY: Double = 0.5
+
+  val durations = List(1, 2, 3, 4, 6, 8, 12, 16)
+  val transitionsAnnotations = ListBuffer.empty[XYShapeAnnotation]
 
   setTitle("Joystick Position")
   setSize(new Dimension(700, 500))
@@ -85,6 +88,25 @@ class JoystickChart extends JFrame with Actor{
     new ChartPanel(jfreechart)
   }
 
+  def addAnnotation(annotation: XYShapeAnnotation) = {
+    chartPanel.getChart.getXYPlot.getRenderer.addAnnotation(annotation, Layer.BACKGROUND)
+  }
+
+  def removeAnnotation(annotation: XYShapeAnnotation) = {
+    chartPanel.getChart.getXYPlot.getRenderer.removeAnnotation(annotation)
+  }
+
+  def createTransitionAnnotation(note: Int, duration: Int, alpha: Double) = {
+    val xPosition = durations.indexOf(duration) * (1.0f/durations.size.toFloat)
+    val yPosition = note * (1.0f/24.0f)
+    new XYShapeAnnotation(
+      new Rectangle2D.Double(xPosition, yPosition, 1.0f/8.0f, 1.0f/24.0f),
+      new BasicStroke(0.0f),
+      new Color(51, 204, 51, 0),
+      new Color(51, 204, 51, Math.min(Math.max((alpha * 1.5 * 255).toInt, 25), 255))
+    )
+  }
+
   //annotation example
   def addAnnotation(plot: XYPlot) = {
     plot.getRenderer.addAnnotation(
@@ -114,10 +136,21 @@ class JoystickChart extends JFrame with Actor{
     xySeriesCollection
   }
 
+  def drawPossibleTransitions(list: List[((Int, Int), Double)]) = {
+    transitionsAnnotations.foreach(removeAnnotation(_))
+    transitionsAnnotations.clear()
+    list.foreach{
+      case transition: ((Int, Int), Double) =>
+        transitionsAnnotations += createTransitionAnnotation(transition._1._1, transition._1._2, transition._2)
+    }
+    transitionsAnnotations.foreach(addAnnotation(_))
+  }
+
   def receive: Receive = {
     case SetVisible => setVisible(true)
     case ChartPanelRef(chartPanel: ChartPanel) => parentPanel.add(chartPanel)
     case UpdateCoords(coords) => if(!manualControl) refreshChart(coords)
+    case TransitionsList(list: List[((Int, Int), Double)]) => drawPossibleTransitions(list)
     case _ ⇒ println("JoystickChart received unknown message")
   }
 
