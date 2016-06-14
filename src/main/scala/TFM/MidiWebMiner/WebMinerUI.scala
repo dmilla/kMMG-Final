@@ -14,7 +14,6 @@ import akka.actor.{ActorSystem, Props}
 
 import scala.swing._
 
-// TODO - do not use arrays in MIDI WEB MINER!!
 // TODO - extract features after process and show summary!
 class WebMinerUI extends Frame {
 

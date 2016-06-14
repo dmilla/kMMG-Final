@@ -12,6 +12,7 @@ import scala.collection.mutable._
 /**
   * Created by diego on 1/04/16.
   */
+
 class NotesExtractor extends Actor {
 
   var extractedFiles: Int = 0
@@ -44,20 +45,22 @@ class NotesExtractor extends Actor {
       smtpCount += 1
       return false
     }
+    val ticksPerSemiQuaver = resolution/4.0f
     val tracks = sequence.getTracks
     if (tracks.nonEmpty) {
       //notify("Extractor got midi with " + tracks.size + " tracks")
       val notes = HashMap(
-        "Piano" -> ArrayBuffer.empty[(Int, Int)],
-        "Organ" -> ArrayBuffer.empty[(Int, Int)],
-        "Guitar" -> ArrayBuffer.empty[(Int, Int)],
-        "Bass" -> ArrayBuffer.empty[(Int, Int)],
-        "Strings" -> ArrayBuffer.empty[(Int, Int)],
-        "Reed" -> ArrayBuffer.empty[(Int, Int)],
-        "Pipe" -> ArrayBuffer.empty[(Int, Int)],
-        "Synth Lead" -> ArrayBuffer.empty[(Int, Int)]
+        "Piano" -> ListBuffer.empty[(Int, Int)],
+        "Organ" -> ListBuffer.empty[(Int, Int)],
+        "Guitar" -> ListBuffer.empty[(Int, Int)],
+        "Bass" -> ListBuffer.empty[(Int, Int)],
+        "Strings" -> ListBuffer.empty[(Int, Int)],
+        "Reed" -> ListBuffer.empty[(Int, Int)],
+        "Pipe" -> ListBuffer.empty[(Int, Int)],
+        "Synth Lead" -> ListBuffer.empty[(Int, Int)]
       )
       for (track <- tracks) {
+        var lastNoteEndTick: Long = -1
         var j = 0
         //println("number of events: " + track.size())
         while (j < track.size) {
@@ -87,6 +90,12 @@ class NotesExtractor extends Actor {
               val initialTick = event.getTick
               var eventIndex = j + 1
               val currentNote = sm.getData1
+              // add silence as -1 note
+              if (lastNoteEndTick != -1 && lastNoteEndTick < initialTick) {
+                val semiQuaversDuration = ((initialTick - lastNoteEndTick)/ticksPerSemiQuaver).toInt
+                val markovStatus: (Int, Int) = (-1, semiQuaversDuration)
+                notes(selectedInstrument) += markovStatus
+              }
               while (eventIndex < track.size) {
                 val event = track.get(eventIndex)
                 val eventTick = event.getTick
@@ -96,19 +105,19 @@ class NotesExtractor extends Actor {
                   val midiCommand = sm.getCommand
                   if (midiCommand == ShortMessage.NOTE_OFF && currentNote == sm.getData1) {
                     if (divisionType == Sequence.PPQ) {
-                      val ticksPerSemiQuaver = resolution/4.0f
                       val semiQuaversDuration = ((eventTick - initialTick)/ticksPerSemiQuaver).toInt
                       val markovStatus: (Int, Int) = (currentNote, semiQuaversDuration)
                       notes(selectedInstrument) += markovStatus
+                      lastNoteEndTick = eventTick
                     }
                     eventIndex = track.size()
                   } else if (midiCommand == ShortMessage.NOTE_ON && currentNote == sm.getData1 && sm.getData2 == 0) {
                     if (divisionType == Sequence.PPQ) {
-                      val ticksPerSemiQuaver = resolution/4.0f
                       val semiQuaversDuration = ((eventTick - initialTick)/ticksPerSemiQuaver).toInt
                       //if (semiQuaversDuration > 15) notify("Got " + semiQuaversDuration + " semiquavers! PPQ Resolution: " + resolution + " (per semiquaver: " + ticksPerSemiQuaver+ ") / Tick difference: " + (eventTick - initialTick))
                       val markovStatus: (Int, Int) = (currentNote, semiQuaversDuration)
                       notes(selectedInstrument) += markovStatus
+                      lastNoteEndTick = eventTick
                     }
                     eventIndex = track.size()
                   }

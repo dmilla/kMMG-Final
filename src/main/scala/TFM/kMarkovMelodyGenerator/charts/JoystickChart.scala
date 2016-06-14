@@ -19,7 +19,7 @@ import org.jfree.ui.Layer
 
 import scala.swing._
 
-// TODO - add background color to chart with existing transitions???
+// TODO - add background color to chart with existing transitions-- PRIORITARY
 class JoystickChart extends JFrame with Actor{
 
   var manualControl: Boolean = true //TODO - add possibility of changing control type from GUI

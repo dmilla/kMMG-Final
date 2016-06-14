@@ -11,8 +11,8 @@ import TFM.CommProtocol._
 import TFM.kMarkovMelodyGenerator.kMMGUI
 import akka.actor.Actor
 
-import scala.collection.mutable.{ArrayBuffer, HashMap}
-import scala.collection.parallel.mutable.ParArray
+import scala.collection.mutable.{HashMap, ListBuffer}
+import scala.collection.parallel.immutable.ParSeq
 import scala.util.matching.Regex
 
 class WebCrawler extends Actor {
@@ -21,7 +21,7 @@ class WebCrawler extends Actor {
     "User-Agent" -> "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)",
     "Referer" -> ""
   )
-  var crawledUrls = ArrayBuffer.empty[String]
+  var crawledUrls = ListBuffer.empty[String]
   var currentDepth = 0
   var midisFound = 0
   var downloadsPath = System.getProperty("user.home")
@@ -30,14 +30,14 @@ class WebCrawler extends Actor {
   def crawlUrl(url: String, followIf: String, maxDepth: Int, downloadsDirectory: String) = {
     notify("¡Crawling " + url + "!")
     currentDepth = 0
-    crawledUrls = ArrayBuffer.empty[String]
+    crawledUrls = ListBuffer.empty[String]
     midisFound = 0
     if (!downloadsDirectory.isEmpty) downloadsPath = downloadsDirectory
     val linkRegex = ("""http://[A-Za-z0-9-_:%&?/.=+]*""" + followIf + """[A-Za-z0-9-_:%&?/.=+]*""").r
     val (contentType, contentDisposition, inputStream) = getHttp(url, "")
     val links = getLinks(scala.io.Source.fromInputStream(inputStream, "UTF-8").getLines.mkString, linkRegex)
     //links.foreach(notify(_))
-    var linksWithReferer = links.map((url, _)).toArray.par
+    var linksWithReferer = links.map((url, _)).toList.par
     notify("Se han encontrado " + links.size + " links en la web objetivo")
     crawledUrls += url
     while (currentDepth < maxDepth) {
@@ -48,8 +48,8 @@ class WebCrawler extends Actor {
     }
   }
 
-  def followLinks(links: ParArray[(String, String)], linkRegex: Regex) = {
-    val new_links = ArrayBuffer.empty[(String, String)]
+  def followLinks(links: ParSeq[(String, String)], linkRegex: Regex) = {
+    val new_links = ListBuffer.empty[(String, String)]
     for ( (referer, url) <- links ) {
       if (!crawledUrls.contains(url)) {
         try {
@@ -82,7 +82,7 @@ class WebCrawler extends Actor {
         }
       }
     }
-    new_links.toArray.par
+    new_links.toList.par
   }
 
   def getHttp(url: String, referer: String) = {

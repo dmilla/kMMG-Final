@@ -44,6 +44,7 @@ class KController extends Actor{
     probs
   }
 
+  // TODO - iterate over all notes!! relative instead of absolute distance (nearests notes, even if faaaar away :D )
   def calcNoteAndDurationProbability(markovProbability: Double, note: Int, controlNote: Int, duration: Int, controlDuration: Int): Double = {
     val noteDistance: Int = math.abs(controlNote - note)
     val durationDistance: Int = math.abs(controlDuration - duration)

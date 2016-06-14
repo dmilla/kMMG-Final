@@ -9,7 +9,7 @@ import TFM.kMarkovMelodyGenerator.kMMGUI
 import akka.actor.Actor
 import com.github.tototoshi.csv.CSVWriter
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ListBuffer
 
 /**
   * Created by diego on 2/04/16.
@@ -52,7 +52,7 @@ class FeaturesExtractor extends  Actor {
     var octave7 = 0
     var octave8 = 0
     var lastNote = 0
-    val variation = ArrayBuffer.empty[Int]
+    val variation = ListBuffer.empty[Int]
     var firstNote = true
     for (noteString <- notes) {
       val note = noteString.toInt
