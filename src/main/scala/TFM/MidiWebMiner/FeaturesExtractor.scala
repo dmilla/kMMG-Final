@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 
 import TFM.CommProtocol._
+import TFM.util.SplitToTuple._
 import TFM.kMarkovMelodyGenerator.kMMGUI
 import akka.actor.Actor
 import com.github.tototoshi.csv.CSVWriter
@@ -37,9 +38,12 @@ class FeaturesExtractor extends  Actor {
     notify("¡Características extraídas exitosamente de " + id + " secuencias de notas! Se ha generado un fichero csv con los datos en: " + path)
   }
 
+  // TODO - add duration features
   def extractFeaturesFromNotesTxt(file: File, writer: CSVWriter, id: Int) = {
     val source = scala.io.Source.fromFile(file)
-    val notes = try source.mkString.split(", ") finally source.close()
+    val fileNotesWithDurations = try source.mkString.replaceAll("[()]", "").split(" - ").map(_.splitToTuple(",")).map{ case (a: String, b: String) => (a.toInt, b.toInt)} finally source.close()
+    //val notes = try source.mkString.split(", ") finally source.close()
+    var silence = 0
     var octaveMinus2 = 0
     var octaveMinus1= 0
     var octave0 = 0
@@ -54,9 +58,9 @@ class FeaturesExtractor extends  Actor {
     var lastNote = 0
     val variation = ListBuffer.empty[Int]
     var firstNote = true
-    for (noteString <- notes) {
-      val note = noteString.toInt
+    for ((note, duration) <- fileNotesWithDurations) {
       note match {
+        case x if x < 0 => silence += 1
         case x if x < 12 => octaveMinus2 += 1
         case x if x < 24 => octaveMinus1 += 1
         case x if x < 36 => octave0 += 1
@@ -77,7 +81,7 @@ class FeaturesExtractor extends  Actor {
       lastNote = note
     }
     val meanVar = variation.sum/variation.size
-    val totalNotes: Double = notes.size
+    val totalNotes: Double = fileNotesWithDurations.size
     writer.writeRow( List(file.getName, id.toString, meanVar.toString, (octaveMinus2/totalNotes).toString, (octaveMinus1/totalNotes).toString, (octave0/totalNotes).toString, (octave1/totalNotes).toString, (octave2/totalNotes).toString, (octave3/totalNotes).toString, (octave4/totalNotes).toString, (octave5/totalNotes).toString, (octave6/totalNotes).toString, (octave7/totalNotes).toString, (octave8/totalNotes).toString) )
   }
 

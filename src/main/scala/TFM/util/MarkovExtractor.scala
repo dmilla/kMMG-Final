@@ -46,6 +46,7 @@ class MarkovExtractor extends Actor{
         prevStatus = (note, duration)
       }
     }
+    markovChain = markovChain.addTransition(normalizedNotesWithDurations.last, normalizedNotesWithDurations.head) // asegurarse de que siempre existen transiciones para cada estado
     notify(markovChain.states().toString())
     markovChain.states().foreach( state =>
       notify("transitions for " + state + ": " + markovChain.transitionsFor(state).toString())

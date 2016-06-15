@@ -17,7 +17,7 @@ class KController extends Actor{
   val durations = List(1, 2, 3, 4, 6, 8, 12, 16)
 
   //TODO - add max distance to control
-
+  //TODO - adapt to -1 = silence note!!
   def calcNoteOutput(markovProbabilites: List[((Int, Int), Double)], xPosition: Double, yPosition: Double) = {
     val controlNote = ((24 - 1) * yPosition).round.toInt // Normalized to two octaves
     val controlDurationIndex = (7 * xPosition).round.toInt // Normalized to 8 possible durations
