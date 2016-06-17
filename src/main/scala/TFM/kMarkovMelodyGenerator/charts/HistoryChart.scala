@@ -46,7 +46,7 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
 
   val renderer = new StandardXYItemRenderer()
   val noteAxis = new NumberAxis("Control Note")
-  noteAxis.setRange(-0.6, 23.6)
+  noteAxis.setRange(-1.6, 23.6)
   noteAxis.setTickUnit(new NumberTickUnit(1))
   val plot = new XYPlot(slidingNotesCollection, null, noteAxis, renderer)
   plot.setRangeAxisLocation(AxisLocation.BOTTOM_OR_LEFT)
@@ -58,7 +58,8 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
   plot.setDataset(1, slidingDurationsCollection)
   val durationAxis = new NumberAxis("Control Duration")
   durationAxis.setTickUnit(new NumberTickUnit(1))
-  durationAxis.setRange(0, 17)
+  durationAxis.setRange(0.8, 16.2)
+  durationAxis.setTickUnit(new NumberTickUnit(1))
   plot.setRangeAxis(1, durationAxis)
   plot.setRangeAxisLocation(1, AxisLocation.BOTTOM_OR_RIGHT)
   plot.setRenderer(1, new StandardXYItemRenderer())

@@ -98,7 +98,7 @@ class JoystickChart extends JFrame with Actor{
 
   def createTransitionAnnotation(note: Int, duration: Int, alpha: Double) = {
     val xPosition = durations.indexOf(duration) * (1.0f/durations.size.toFloat)
-    val yPosition = note * (1.0f/24.0f)
+    val yPosition = note * (1.0f/25.0f)
     new XYShapeAnnotation(
       new Rectangle2D.Double(xPosition, yPosition, 1.0f/8.0f, 1.0f/24.0f),
       new BasicStroke(0.0f),

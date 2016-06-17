@@ -118,8 +118,10 @@ class Conductor extends Actor{
 
   def addNextNote(note: (Int, Int)) = {
     val currentNoteEndTick = currentNoteEndMidiEvent.getTick
-    track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, note._1 + outNormalization, 127), currentNoteEndTick))
     val endTick = currentNoteEndTick + note._2
+    //Check if silence
+    if (note._1 != -1) track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, note._1 + outNormalization, 127), currentNoteEndTick))
+    else track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, note._1 + outNormalization, 0), currentNoteEndTick))
     currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, note._1 + outNormalization, 127), endTick)
     track.add(currentNoteEndMidiEvent)
     currentState = note
