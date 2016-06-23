@@ -2,7 +2,7 @@ package TFM.device
 
 import java.nio.{ByteBuffer, ByteOrder}
 
-import TFM.CommProtocol.{ConnectToDeviceRequest, UpdateCoords, UpdateFeedbackForce}
+import TFM.CommProtocol.{ConnectToDeviceRequest, EndManualControlRequest, UpdateCoords, UpdateFeedbackForce}
 import TFM.kMarkovMelodyGenerator.kMMGUI
 import akka.actor.{Actor, Props}
 import akka.stream.ActorMaterializer
@@ -87,6 +87,7 @@ class DeviceController extends Actor{
     source.viaMat(serial)(Keep.right).to(printer).run()  onComplete {
       case Success(connection) => {
         notify("succesfully connected! " + connection)
+        kMMGUI.joystickChart ! EndManualControlRequest
         bytePublisherRef ! Publish(deviceTorque)
       }
       case Failure(error) => notify("error trying to connect: " + error)

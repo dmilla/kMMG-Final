@@ -34,7 +34,6 @@ class MarkovExtractor extends Actor{
       }
     }
     val normalizedNotesWithDurations = normalizeNotesAndDurations(notesWithDuration)
-    //initializeMarkovChain TODO Initialize or not??
     var prevStatus = (999, 999)
     var transitionsCount = 0
     normalizedNotesWithDurations.foreach { case (note: Int, duration: Int) =>
@@ -98,19 +97,7 @@ class MarkovExtractor extends Actor{
     res
   }
 
-  //TODO adapt to duration if init is needed
-  /*def initializeMarkovChain = {
-    val maxNote: Int = 24
-    val notes = List.range(0, maxNote)
-    notes.foreach( startNote =>
-      notes.foreach( endNote =>
-        markovChain = markovChain.addTransition(startNote, endNote)
-      )
-    )
-  }*/
-
   def notify(msg: String) = kMMGUI.addOutput(msg)
-
 
   def receive = {
     case TransitionsRequest(state: (Int, Int)) => sender ! TransitionsList(markovChain.transitionsFor((normalizeNote(state._1), normalizeDuration(state._2))))

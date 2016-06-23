@@ -8,7 +8,7 @@ import java.awt.geom.Rectangle2D
 import java.awt.{BasicStroke, Color}
 import javax.swing.{JFrame, JPanel}
 
-import TFM.CommProtocol.{ChartPanelRef, SetVisible, TransitionsList, UpdateCoords}
+import TFM.CommProtocol._
 import TFM.kMarkovMelodyGenerator.kMMGUI
 import akka.actor.Actor
 import org.jfree.chart._
@@ -22,7 +22,7 @@ import scala.swing._
 
 class JoystickChart extends JFrame with Actor{
 
-  var manualControl: Boolean = true //TODO - add possibility of changing control type from GUI
+  var manualControl: Boolean = true
 
   var lastX: Double = 0.5
   var lastY: Double = 0.5
@@ -96,14 +96,22 @@ class JoystickChart extends JFrame with Actor{
     chartPanel.getChart.getXYPlot.getRenderer.removeAnnotation(annotation)
   }
 
-  def createTransitionAnnotation(note: Int, duration: Int, alpha: Double) = {
+  def createTransitionAnnotation(note: Int, duration: Int, probability: Double) = {
     val xPosition = durations.indexOf(duration) * (1.0f/durations.size.toFloat)
     val yPosition = note * (1.0f/25.0f)
+    val color: Color = probability match {
+      case x if x < 0.02 => new Color(206, 0, 0, 108)
+      case x if x < 0.05 => new Color(206, 108, 0, 108)
+      case x if x < 0.1 => new Color(206, 206, 0, 108)
+      case x if x < 1 => new Color(53, 206, 53, 108)
+      case _ => Color.white
+    }
+    //val oldColor = new Color(51, 204, 51, Math.min(Math.max((probability * 1.5 * 255).toInt, 25), 255))
     new XYShapeAnnotation(
       new Rectangle2D.Double(xPosition, yPosition, 1.0f/8.0f, 1.0f/24.0f),
       new BasicStroke(0.0f),
-      new Color(51, 204, 51, 0),
-      new Color(51, 204, 51, Math.min(Math.max((alpha * 1.5 * 255).toInt, 25), 255))
+      color,
+      color
     )
   }
 
@@ -120,7 +128,10 @@ class JoystickChart extends JFrame with Actor{
     )
   }
 
-  def refreshChart(coords: (Double, Double)) = chartPanel.getChart.getXYPlot().setDataset(createDatasetFromPoint(coords._1, coords._2))
+  // TODO - add control range annotation
+  def refreshChart(coords: (Double, Double)) = {
+    chartPanel.getChart.getXYPlot().setDataset(createDatasetFromPoint(coords._1, coords._2))
+  }
 
   def createDatasetFromPoint(x: Double, y: Double): XYDataset = {
     var drawX = x
@@ -148,6 +159,7 @@ class JoystickChart extends JFrame with Actor{
 
   def receive: Receive = {
     case SetVisible => setVisible(true)
+    case EndManualControlRequest => manualControl = false
     case ChartPanelRef(chartPanel: ChartPanel) => parentPanel.add(chartPanel)
     case UpdateCoords(coords) => if(!manualControl) refreshChart(coords)
     case TransitionsList(list: List[((Int, Int), Double)]) => drawPossibleTransitions(list)

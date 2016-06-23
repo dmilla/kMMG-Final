@@ -1,5 +1,8 @@
 package TFM.kMarkovMelodyGenerator
 
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Calendar
 import javax.sound.midi._
 
 import TFM.CommProtocol._
@@ -16,7 +19,6 @@ import scala.concurrent.duration._
   * Created by diego on 31/05/16.
   */
 
-// TODO - add option to save midi track
 class Conductor extends Actor{
 
   val durations = List(1, 2, 3, 4, 6, 8, 12, 16)
@@ -140,7 +142,7 @@ class Conductor extends Actor{
 
   def requestNextNote() = {
     if (currentStateTransitions.nonEmpty) {
-      implicit val timeout = Timeout(20 milliseconds)
+      implicit val timeout = Timeout(80 milliseconds)
       val noteFuture = kMMGUI.kController ? CalcNoteOutputRequest(currentStateTransitions, currentCoords._1, currentCoords._2)
       val nextNote = Await.result(noteFuture, timeout.duration).asInstanceOf[(Int, Int)] // Warning, synchronous request!
       addNextNote(nextNote)
@@ -149,6 +151,15 @@ class Conductor extends Actor{
       stopMelodyGeneration()
       notify("Error while trying to get Markov Transitions, please generate model first. Melody generation has been stopped.")
     }
+  }
+
+  def saveMidiTrack = {
+    val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH;mm;ss")
+    val now = Calendar.getInstance.getTime
+    val path = kMMGUI.notesDirField.text
+    val outFile = new File(path +  "/kMarkovMelodyGeneratedSequence " + dateFormat.format(now) + ".mid")
+    MidiSystem.write(sequence, 0, outFile)
+    notify("Succesfully exported MIDI sequence in directory " +  path)
   }
 
   def notify(msg: String) = kMMGUI.addOutput(msg)
@@ -162,6 +173,7 @@ class Conductor extends Actor{
       kMMGUI.joystickChart ! TransitionsList(list)
       currentStateTransitions = list
       notify("\nConductor received new transitions list!!!\n")
+    case SaveMidiTrackRequest => saveMidiTrack
     case _ ⇒ println("Conductor received unknown message")
   }
 

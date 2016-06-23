@@ -35,5 +35,7 @@ object CommProtocol {
   case class UpdateHistogram(controlNote: Int, controlDuration: Int, tick: Long)
   case class DrawNote(tick: Long, note: Int, duration: Int)
   case class DrawNoteCut(tick: Long, note: Int)
+  case class EndManualControlRequest()
+  case class SaveMidiTrackRequest()
 
 }

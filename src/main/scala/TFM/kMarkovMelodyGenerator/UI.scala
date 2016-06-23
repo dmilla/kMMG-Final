@@ -19,7 +19,7 @@ import scala.swing._
 // TODO - add sequencer like UI
 // TODO - only show start/stop melody buttons if model generated previously => BEST POSSIBLE UX!
 // TODO - add playback program change setting
-// TODO - adapt to notes with silences! PRIORITARY
+
 class UI extends MainFrame {
 
   title = "Controlled Markov Melody Generator - Diego Milla - TFM - Máster SSII - USAL"
@@ -105,6 +105,9 @@ class UI extends MainFrame {
     }
     contents += Button("Parar Melodía") {
       conductor ! StopMelodyGenerationRequest
+    }
+    contents += Button("Exportar secuencia como MIDI") {
+      conductor ! SaveMidiTrackRequest
     }
     contents += Swing.VStrut(10)
 
