@@ -23,7 +23,7 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
 
   setTitle("Control Histogram")
   setSize(new Dimension(1200, 400))
-  setLocation(300, 550)
+  setLocation(500, 660)
   val parentPanel = new JPanel(new BorderLayout())
 
   var firstIndex: Int = 0

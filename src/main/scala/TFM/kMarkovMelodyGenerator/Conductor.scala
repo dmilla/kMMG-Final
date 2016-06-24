@@ -96,20 +96,18 @@ class Conductor extends Actor{
   }
 
   def updateFeedbackForce(controlNote: Int, controlDuration: Int) = {
-    var lowNearestNote = (0, 0.0)
+    var lowNearestNote = (-1, 0.0)
     var highNearestNote = (23, 0.0)
     var shortNearestDuration = (1, 0.0)
     var longNearestDuration = (16, 0.0)
     currentStateTransitions.foreach{
-      case prob: ((Int, Int), Double) =>
-        val note = prob._1._1
-        val duration = prob._1._2
+      case((note: Int, duration: Int), prob: Double) =>
         val noteDistance = note - controlNote
         val durationDistance = duration - controlDuration
-        if (noteDistance < 0 && noteDistance <= lowNearestNote._1 - controlNote) lowNearestNote = (note, prob._2)
-        if (noteDistance > 0 && noteDistance <= highNearestNote._1 - controlNote) highNearestNote = (note, prob._2)
-        if (durationDistance < 0 && durationDistance <= shortNearestDuration._1 - controlDuration) shortNearestDuration = (duration, prob._2)
-        if (durationDistance > 0 && durationDistance <= longNearestDuration._1) longNearestDuration = (duration, prob._2)
+        if (noteDistance < 0 && noteDistance >= lowNearestNote._1 - controlNote) lowNearestNote = (note, prob)
+        if (noteDistance > 0 && noteDistance <= highNearestNote._1 - controlNote) highNearestNote = (note, prob)
+        if (durationDistance < 0 && durationDistance >= shortNearestDuration._1 - controlDuration) shortNearestDuration = (duration, prob)
+        if (durationDistance > 0 && durationDistance <= longNearestDuration._1) longNearestDuration = (duration, prob)
     }
     //TODO @ LAB - verify force feedback direction and scaling
     val scaling = 100
