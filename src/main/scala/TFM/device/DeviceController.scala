@@ -180,7 +180,7 @@ class DeviceController extends Actor{
 
     //out[0] = -tau1;
     //out[1] = tau2;
-    notify(-tau1 + " " + tau2)
+    //notify(-tau1 + " " + tau2)
     val res = ByteString(shortToBytes((-tau1).toShort) ++ shortToBytes(tau2.toShort))
     deviceTorque = res
     res

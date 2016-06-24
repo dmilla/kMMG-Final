@@ -94,19 +94,19 @@ class JoystickChart extends JFrame with Actor{
 
   def createTransitionAnnotation(note: Int, duration: Int, probability: Double) = {
     val xPosition = durations.indexOf(duration) * (1.0f/durations.size.toFloat)
-    val yPosition = (note + 1) * (1.0f/25.0f) // adapted for -1 as silence
+    val yPosition = (note + 1) * 0.04 // adapted for -1 as silence
     val alpha = 108
     val color: Color = probability match {
       case x if x < 0.02 => new Color(206, 0, 0, alpha)
       case x if x < 0.05 => new Color(206, 108, 0, alpha)
       case x if x < 0.1 => new Color(206, 206, 0, alpha)
-      case x if x < 1 => new Color(53, 206, 53, alpha)
+      case x if x <= 1 => new Color(53, 206, 53, alpha)
       case _ => Color.white
     }
     //val oldColor = new Color(51, 204, 51, Math.min(Math.max((probability * 1.5 * 255).toInt, 25), 255))
     new XYShapeAnnotation(
-      new Rectangle2D.Double(xPosition, yPosition, 1.0f/8.0f, 1.0f/25.0f),
-      new BasicStroke(0.3f),
+      new Rectangle2D.Double(xPosition, yPosition, 0.125, 0.04),
+      new BasicStroke(0.0f),
       color,
       color
     )
@@ -116,7 +116,7 @@ class JoystickChart extends JFrame with Actor{
     val note = (24 * lastY).round.toInt - 1
     val duration = durations((7 * lastX).round.toInt)
     val xPosition = durations.indexOf(duration) * (1.0f/durations.size.toFloat)
-    val yPosition = (note + 1) * (1.0f/25.0f) // adapted for -1 as silence
+    val yPosition = (note + 1) * 0.04 // adapted for -1 as silence
     new XYShapeAnnotation(
       new Ellipse2D.Double(xPosition - 0.0625, yPosition - 0.02, 0.25, 0.08),
       new BasicStroke(0.8f),
@@ -188,7 +188,6 @@ class JoystickChart extends JFrame with Actor{
   def receive: Receive = {
     case SetVisible => setVisible(true)
     case EndManualControlRequest => manualControl = false
-    case ChartPanelRef(chartPanel: ChartPanel) => parentPanel.add(chartPanel)
     case UpdateCoords(coords) => if(!manualControl) refreshChart(coords)
     case TransitionsList(list: List[((Int, Int), Double)]) => drawPossibleTransitions(list)
     case _ ⇒ println("JoystickChart received unknown message")

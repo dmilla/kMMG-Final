@@ -24,7 +24,29 @@ class FeaturesExtractor extends  Actor {
     val now = Calendar.getInstance.getTime
     val csv = new File(path + "/" + dateFormat.format(now) + " - featuresExtraction.csv")
     val writer = CSVWriter.open(csv)
-    writer.writeRow(List("Archivo", "ID", "Variación Media", "Octava -2", "Octava -1", "Octava 0", "Octava 1", "Octava 2", "Octava 3", "Octava 4", "Octava 5", "Octava 6", "Octava 7", "Octava 8"))
+    writer.writeRow(List("Archivo",
+      "ID",
+      "Variación Media",
+      "Octava -2",
+      "Octava -1",
+      "Octava 0",
+      "Octava 1",
+      "Octava 2",
+      "Octava 3",
+      "Octava 4",
+      "Octava 5",
+      "Octava 6",
+      "Octava 7",
+      "Octava 8",
+      "Semicorcheas",
+      "Corcheas",
+      "Corcheas .",
+      "Negras",
+      "Negras .",
+      "Blancas",
+      "Blancas .",
+      "Redondas"
+    ))
     var id = 1
     for(file <- pathFile.listFiles if file.getName endsWith ".txt"){
       try {
@@ -38,7 +60,6 @@ class FeaturesExtractor extends  Actor {
     notify("¡Características extraídas exitosamente de " + id + " secuencias de notas! Se ha generado un fichero csv con los datos en: " + path)
   }
 
-  // TODO - add duration features
   def extractFeaturesFromNotesTxt(file: File, writer: CSVWriter, id: Int) = {
     val source = scala.io.Source.fromFile(file)
     val fileNotesWithDurations = try source.mkString.replaceAll("[()]", "").split(" - ").map(_.splitToTuple(",")).map{ case (a: String, b: String) => (a.toInt, b.toInt)} finally source.close()
@@ -56,6 +77,14 @@ class FeaturesExtractor extends  Actor {
     var octave7 = 0
     var octave8 = 0
     var lastNote = 0
+    var duration1 = 0
+    var duration2 = 0
+    var duration3 = 0
+    var duration4 = 0
+    var duration6 = 0
+    var duration8 = 0
+    var duration12 = 0
+    var duration16 = 0
     val variation = ListBuffer.empty[Int]
     var firstNote = true
     for ((note, duration) <- fileNotesWithDurations) {
@@ -73,6 +102,16 @@ class FeaturesExtractor extends  Actor {
         case x if x < 120 => octave7 += 1
         case x if x < 128 => octave8 += 1
       }
+      duration match {
+        case x if x < 2   => duration1 += 1
+        case x if x == 2  => duration2 += 1
+        case x if x == 3  => duration3 += 1
+        case x if x == 4  => duration4 += 1
+        case x if x < 7   => duration6 += 1
+        case x if x == 8  => duration8 += 1
+        case x if x < 13  => duration12 += 1
+        case x if x > 12  => duration16 += 1
+      }
       if (firstNote) {
         firstNote = false
       } else {
@@ -81,8 +120,33 @@ class FeaturesExtractor extends  Actor {
       lastNote = note
     }
     val meanVar = variation.sum/variation.size
-    val totalNotes: Double = fileNotesWithDurations.size
-    writer.writeRow( List(file.getName, id.toString, meanVar.toString, (octaveMinus2/totalNotes).toString, (octaveMinus1/totalNotes).toString, (octave0/totalNotes).toString, (octave1/totalNotes).toString, (octave2/totalNotes).toString, (octave3/totalNotes).toString, (octave4/totalNotes).toString, (octave5/totalNotes).toString, (octave6/totalNotes).toString, (octave7/totalNotes).toString, (octave8/totalNotes).toString) )
+    val totalNotes: Double = fileNotesWithDurations.length
+    writer.writeRow(
+      List(
+        file.getName,
+        id.toString,
+        meanVar.toString,
+        (octaveMinus2/totalNotes).toString,
+        (octaveMinus1/totalNotes).toString,
+        (octave0/totalNotes).toString,
+        (octave1/totalNotes).toString,
+        (octave2/totalNotes).toString,
+        (octave3/totalNotes).toString,
+        (octave4/totalNotes).toString,
+        (octave5/totalNotes).toString,
+        (octave6/totalNotes).toString,
+        (octave7/totalNotes).toString,
+        (octave8/totalNotes).toString,
+        (duration1/totalNotes).toString,
+        (duration2/totalNotes).toString,
+        (duration3/totalNotes).toString,
+        (duration4/totalNotes).toString,
+        (duration6/totalNotes).toString,
+        (duration8/totalNotes).toString,
+        (duration12/totalNotes).toString,
+        (duration16/totalNotes).toString
+      )
+    )
   }
 
   def notify(msg: String) = kMMGUI.midiWebMiner.addExtractorOutput(msg)

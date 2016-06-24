@@ -93,7 +93,7 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
     new XYShapeAnnotation(
       new Rectangle2D.Double(tick, yPosition, duration, ANNOTATION_HEIGHT),
       new BasicStroke(1.0f),
-      Color.blue,
+      Color.black,
       Color.yellow
     )
   }
@@ -132,7 +132,6 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
 
   def receive: Receive = {
     case SetVisible => setVisible(true)
-    case ChartPanelRequest(actorRef: ActorRef) => actorRef ! ChartPanelRef(chartPanel)
     case UpdateHistogram(controlNote: Int, controlDuration: Int, tick: Long) => {
       controlNotesData.add(tick, controlNote)
       controlDurationsData.add(tick, controlDuration)

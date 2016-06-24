@@ -30,7 +30,7 @@ class WebMinerUI extends Frame {
   val labelSize = new Dimension(250, 25)
   val depthSize = new Dimension(60, 25)
 
-  val nameField = new TextField { text = "http://www.download-midi.com/"}
+  val nameField = new TextField { text = "http://www.download-midi.com/" }
   val followField = new TextField { text = "midi"}
   val depthField = new TextField { text = "2" }
   nameField.peer.setMaximumSize(textFieldSize)

@@ -10,13 +10,14 @@ import akka.actor.Actor
   */
 class KController extends Actor{
 
-  var affectedNotes = 1
   var k: Double = 0.8
+  var maxNoteDistanceToControl = 6
+  var maxDurationDistanceToControl = 3
 
   val formatter = new DecimalFormat("#.##")
   val durations = List(1, 2, 3, 4, 6, 8, 12, 16)
 
-  //TODO - add max distance to control
+  //TODO - add max distance to control GUI setting
   def calcNoteOutput(markovProbabilites: List[((Int, Int), Double)], xPosition: Double, yPosition: Double) = {
     val controlNote = (24 * yPosition).round.toInt - 1 // Normalized to two octaves and -1 for silence
     val controlDurationIndex = (7 * xPosition).round.toInt // Normalized to 8 possible durations
@@ -26,7 +27,6 @@ class KController extends Actor{
     val controlProbabilities = calcControlProbabilities(markovProbabilites, controlNote, controlDuration).toMap
     //notify("Final output probabilities: " + controlProbabilities)
     val out = sample[(Int, Int)](controlProbabilities)
-    //kMMGUI.conductor ! UpdateStatus(out)
     notify("Nota de salida calculada: " + out + " - Se reproducirá una nota normalizada en función de los ajustes")
     out
   }
@@ -58,15 +58,23 @@ class KController extends Actor{
     // Old way to calc probs with distance
     markovProbabilites.foreach{
       case((note, duration), prob) =>
-        probs += ((note, duration) -> calcNoteAndDurationProbability(prob, note, controlNote, duration, controlDuration))
+        val noteDistance: Int = math.abs(controlNote - note)
+        val durationDistance: Int = math.abs(controlDuration - duration)
+        if (noteDistance <= maxNoteDistanceToControl && durationDistance <= maxDurationDistanceToControl) probs += ((note, duration) -> calcNoteAndDurationProbability(prob, note, noteDistance, duration, durationDistance))
+    }
+    if (probs.isEmpty) {
+      markovProbabilites.foreach{
+        case((note, duration), prob) =>
+          val noteDistance: Int = math.abs(controlNote - note)
+          val durationDistance: Int = math.abs(controlDuration - duration)
+          probs += ((note, duration) -> calcNoteAndDurationProbability(prob, note, noteDistance, duration, durationDistance))
+      }
     }
     probs
   }
 
   // TODO??? Probably not - iterate over all notes!! relative instead of absolute distance (nearests notes, even if faaaar away :D )
-  def calcNoteAndDurationProbability(markovProbability: Double, note: Int, controlNote: Int, duration: Int, controlDuration: Int): Double = {
-    val noteDistance: Int = math.abs(controlNote - note)
-    val durationDistance: Int = math.abs(controlDuration - duration)
+  def calcNoteAndDurationProbability(markovProbability: Double, note: Int, noteDistance: Int, duration: Int, durationDistance: Int): Double = {
     var outProb: Double = (1.0 - k) * markovProbability
     if (noteDistance == 0 && durationDistance == 0) {
       val increase: Double = k * 0.4
@@ -95,10 +103,6 @@ class KController extends Actor{
         return item  // return so that we don't have to search through the whole distribution
     }
     sys.error(f"this should never happen")  // needed so it will compile
-  }
-
-  def updateAffectedNotes(newValue: Int) ={
-    affectedNotes = newValue
   }
 
   def updateK(newValue: Double) ={

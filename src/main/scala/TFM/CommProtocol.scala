@@ -30,8 +30,6 @@ object CommProtocol {
   case class NewSequencerTick(tick: Long)
   case class TransitionsList(list: List[((Int, Int), Double)])
   case class UpdateFeedbackForce(forceVector: (Float, Float))
-  case class ChartPanelRequest(actorRef: ActorRef)
-  case class ChartPanelRef(chartPanel: ChartPanel)
   case class UpdateHistogram(controlNote: Int, controlDuration: Int, tick: Long)
   case class DrawNote(tick: Long, note: Int, duration: Int)
   case class DrawNoteCut(tick: Long, note: Int)

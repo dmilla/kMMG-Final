@@ -34,20 +34,26 @@ class WebCrawler extends Actor {
     crawledUrls = ListBuffer.empty[String]
     midisFound = 0
     if (!downloadsDirectory.isEmpty) downloadsPath = downloadsDirectory
-    val linkRegex = ("""http://[A-Za-z0-9-_:%&?/.=+]*""" + followIf + """[A-Za-z0-9-_:%&?/.=+]*""").r
-    val (contentType, contentDisposition, inputStream) = getHttp(url, "")
-    val source = scala.io.Source.fromInputStream(inputStream)
-    val sourceString = source.getLines.mkString
-    val links = getLinks(sourceString, linkRegex)
-    links.foreach(notify(_))
-    var linksWithReferer = links.map((url, _)).toList.par
-    notify("Se han encontrado " + links.size + " links en la web objetivo")
-    crawledUrls += url
-    while (currentDepth < maxDepth) {
-      val newLinks = followLinks(linksWithReferer, linkRegex)
-      currentDepth += 1
-      notify("Profundidad " + currentDepth + " alcanzada, ¡se encontraron " + newLinks.size + " nuevos links!")
-      linksWithReferer = newLinks
+    val linkRegex: Regex = ("""http://[A-Za-z0-9-_:%&?/.=+]*""" + followIf + """[A-Za-z0-9-_:%&?/.=+]*""").r
+    //val linkRegex = ".*<a href=\"(.*)\">.*".r
+    try {
+      val (contentType, contentDisposition, inputStream) = getHttp(url, "")
+      val source = scala.io.Source.fromInputStream(inputStream, "ISO-8859-1")
+      val sourceString = source.getLines.mkString
+      val links = getLinks(sourceString, linkRegex)
+      links.foreach(notify(_))
+      var linksWithReferer = links.map((url, _)).toList.par
+      notify("Se han encontrado " + links.size + " links en la web objetivo")
+      crawledUrls += url
+      while (currentDepth < maxDepth) {
+        val newLinks = followLinks(linksWithReferer, linkRegex)
+        currentDepth += 1
+        notify("Profundidad " + currentDepth + " alcanzada, ¡se encontraron " + newLinks.size + " nuevos links!")
+        linksWithReferer = newLinks
+      }
+    } catch {
+      case e: java.nio.charset.MalformedInputException => notify("Excepción accediendo a " + url + ", codec no soportado.")
+      case e: Exception => notify("Excepción accediendo a " + url + ", el sitio no es soportado actualmente. Error: " + e)
     }
   }
 
