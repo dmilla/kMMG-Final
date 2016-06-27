@@ -65,15 +65,12 @@ class KController extends Actor{
     if (probs.isEmpty) {
       markovProbabilites.foreach{
         case((note, duration), prob) =>
-          val noteDistance: Int = math.abs(controlNote - note)
-          val durationDistance: Int = math.abs(controlDuration - duration)
-          probs += ((note, duration) -> calcNoteAndDurationProbability(prob, note, noteDistance, duration, durationDistance))
+          probs += ((note, duration) -> prob)
       }
     }
     probs
   }
 
-  // TODO??? Probably not - iterate over all notes!! relative instead of absolute distance (nearests notes, even if faaaar away :D )
   def calcNoteAndDurationProbability(markovProbability: Double, note: Int, noteDistance: Int, duration: Int, durationDistance: Int): Double = {
     var outProb: Double = (1.0 - k) * markovProbability
     if (noteDistance == 0 && durationDistance == 0) {

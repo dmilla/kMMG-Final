@@ -15,6 +15,7 @@ import scala.collection.mutable.ListBuffer
 /**
   * Created by diego on 2/04/16.
   */
+
 class FeaturesExtractor extends  Actor {
 
   def extractFeatures(path: String) = {
@@ -24,9 +25,11 @@ class FeaturesExtractor extends  Actor {
     val now = Calendar.getInstance.getTime
     val csv = new File(path + "/" + dateFormat.format(now) + " - featuresExtraction.csv")
     val writer = CSVWriter.open(csv)
-    writer.writeRow(List("Archivo",
+    writer.writeRow(List(
+      "Archivo",
       "ID",
       "Variación Media",
+      "Silencio",
       "Octava -2",
       "Octava -1",
       "Octava 0",
@@ -63,7 +66,6 @@ class FeaturesExtractor extends  Actor {
   def extractFeaturesFromNotesTxt(file: File, writer: CSVWriter, id: Int) = {
     val source = scala.io.Source.fromFile(file)
     val fileNotesWithDurations = try source.mkString.replaceAll("[()]", "").split(" - ").map(_.splitToTuple(",")).map{ case (a: String, b: String) => (a.toInt, b.toInt)} finally source.close()
-    //val notes = try source.mkString.split(", ") finally source.close()
     var silence = 0
     var octaveMinus2 = 0
     var octaveMinus1= 0
@@ -126,6 +128,7 @@ class FeaturesExtractor extends  Actor {
         file.getName,
         id.toString,
         meanVar.toString,
+        (silence/totalNotes).toString,
         (octaveMinus2/totalNotes).toString,
         (octaveMinus1/totalNotes).toString,
         (octave0/totalNotes).toString,
