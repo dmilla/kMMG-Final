@@ -2,7 +2,7 @@ package TFM.kMarkovMelodyGenerator
 
 import java.text.DecimalFormat
 
-import TFM.CommProtocol.CalcNoteOutputRequest
+import TFM.CommProtocol._
 import akka.actor.Actor
 
 /**
@@ -59,7 +59,7 @@ class KController extends Actor{
     markovProbabilites.foreach{
       case((note, duration), prob) =>
         val noteDistance: Int = math.abs(controlNote - note)
-        val durationDistance: Int = math.abs(controlDuration - duration)
+        val durationDistance: Int = math.abs(durations.indexOf(controlDuration) - durations.indexOf(duration))
         if (noteDistance <= maxNoteDistanceToControl && durationDistance <= maxDurationDistanceToControl) probs += ((note, duration) -> calcNoteAndDurationProbability(prob, note, noteDistance, duration, durationDistance))
     }
     if (probs.isEmpty) {
@@ -102,14 +102,37 @@ class KController extends Actor{
     sys.error(f"this should never happen")  // needed so it will compile
   }
 
-  def updateK(newValue: Double) ={
-    k = newValue
+  def updateK(newK: Double) = {
+    if (newK != k && newK <= 1 && newK >= 0) {
+      k = newK
+      notify("Parámetro K (peso del control) ajustado correctamente a " + k)
+      true
+    } else false
+  }
+
+  def updateMaxDurationDistance(distance: Byte): Boolean = {
+    if (distance != maxDurationDistanceToControl) {
+      maxDurationDistanceToControl = distance
+      notify("Distancia máxima de la duración de salida respecto al control ajustada correctamente a " + maxDurationDistanceToControl)
+      true
+    } else false
+  }
+
+  def updateMaxNoteDistance(distance: Byte): Boolean = {
+    if (distance != maxNoteDistanceToControl) {
+      maxNoteDistanceToControl = distance
+      notify("Distancia máxima de la nota de salida respecto al control ajustada correctamente a " + maxNoteDistanceToControl)
+      true
+    } else false
   }
 
   def notify(msg: String) = kMMGUI.addOutput(msg)
 
   def receive: Receive = {
     case CalcNoteOutputRequest(markovProbabilities, xPosition, yPosition) => sender ! calcNoteOutput(markovProbabilities, xPosition, yPosition)
+    case UpdateMaxDurationDistanceToControl(distance: Byte) => updateMaxDurationDistance(distance)
+    case UpdateMaxNoteDistanceToControl(distance: Byte) => updateMaxNoteDistance(distance)
+    case UpdateK(k: Double) => updateK(k)
     case _ ⇒ println("kController received unknown message")
   }
 }

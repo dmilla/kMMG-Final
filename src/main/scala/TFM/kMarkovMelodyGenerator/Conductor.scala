@@ -32,7 +32,8 @@ class Conductor extends Actor{
   var currentCoords: (Double, Double) = (0.5, 0.5)
   var lastNoteCoords: (Double, Double) = (0.5, 0.5)
 
-  var outNormalization: Byte = 36 // TODO add output normalization to GUI
+  var outNormalization: Byte = 48 // TODO add output normalization to GUI
+  var currentTempo: Int = 120
 
   var initialized: Boolean = false
   var started: Boolean = false
@@ -49,7 +50,7 @@ class Conductor extends Actor{
     if (!initialized) {
       sequencer.open()
       sequencer.setSequence(sequence)
-      sequencer.setTempoInBPM(120)// TODO variable tempo add GUI Fields
+      sequencer.setTempoInBPM(currentTempo)// TODO variable tempo add GUI Fields
       track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, 12 + outNormalization, 127), 1))
       track.add(currentNoteEndMidiEvent)
       kMMGUI.markovExtractor ! TransitionsRequest(currentState)
@@ -158,6 +159,24 @@ class Conductor extends Actor{
     val outFile = new File(path +  "/kMarkovMelodyGeneratedSequence " + dateFormat.format(now) + ".mid")
     MidiSystem.write(sequence, 0, outFile)
     notify("Succesfully exported MIDI sequence in directory " +  path)
+    true
+  }
+
+  def changeTempo(tempo: Int): Boolean = {
+    if (tempo != currentTempo) {
+      sequencer.setTempoInBPM(tempo)
+      currentTempo = tempo
+      notify("Tempo actualizado exitosamente a " + currentTempo + " BPMs")
+      true
+    } else false
+  }
+
+  def changeOutNormalization(norm: Byte): Boolean = {
+    if (norm != outNormalization) {
+      outNormalization = norm
+      notify("Normalización actualizada exitosamente, octava inicial actual: " + norm/24)
+      true
+    } else false
   }
 
   def notify(msg: String) = kMMGUI.addOutput(msg)
@@ -172,6 +191,8 @@ class Conductor extends Actor{
       currentStateTransitions = list
       notify("\nConductor received new transitions list!!!\n")
     case SaveMidiTrackRequest => saveMidiTrack
+    case UpdateTempo(tempo: Int) => changeTempo(tempo)
+    case UpdateOutputNormalization(norm: Byte) => changeOutNormalization(norm)
     case _ ⇒ println("Conductor received unknown message")
   }
 

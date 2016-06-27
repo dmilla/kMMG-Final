@@ -35,6 +35,7 @@ class UI extends MainFrame {
   val conductor = controlSystem.actorOf(Props[Conductor])
   val joystickChart = controlSystem.actorOf(Props[JoystickChart])
   val historyChart = controlSystem.actorOf(Props[HistoryChart])
+  val settings = controlSystem.actorOf(Props[SettingsFrame])
 
   val textFieldSize = new Dimension(360, 25)
   val labelSize = new Dimension(300, 25)
@@ -81,6 +82,9 @@ class UI extends MainFrame {
       contents += Button("Ver Gráficos") {
         historyChart ! SetVisible
         joystickChart ! SetVisible
+      }
+      contents += Button("Ajustes") {
+        settings ! SetVisible
       }
     }
     contents += Button("Midi Web Miner") {

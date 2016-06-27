@@ -21,7 +21,7 @@ import org.jfree.ui.Layer
   */
 class HistoryChart extends JFrame with Actor with ChangeListener{
 
-  setTitle("Control Histogram")
+  setTitle("Histograma del Control")
   setSize(new Dimension(1200, 400))
   setLocation(500, 660)
   val parentPanel = new JPanel(new BorderLayout())
@@ -31,14 +31,14 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
   val ANNOTATION_HEIGHT = 1
 
   val controlNotesCollection = new XYSeriesCollection()
-  val controlNotesData = new XYSeries("Control Note")
+  val controlNotesData = new XYSeries("Nota")
   controlNotesData.add(0, 11)
   controlNotesData.add(1, 11)
   controlNotesCollection.addSeries(controlNotesData)
   var slidingNotesCollection = new SlidingXYDataset(controlNotesCollection, firstIndex, WINDOW)
 
   val controlDurationsCollection = new XYSeriesCollection()
-  val controlDurationsData = new XYSeries("Control Duration")
+  val controlDurationsData = new XYSeries("Duración")
   controlDurationsData.add(0, 4)
   controlDurationsData.add(1, 4)
   controlDurationsCollection.addSeries(controlDurationsData)
@@ -65,7 +65,7 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
   plot.setRenderer(1, new StandardXYItemRenderer())
   plot.mapDatasetToRangeAxis(1, 1)
 
-  val chart = new JFreeChart("Control Histogram", JFreeChart.DEFAULT_TITLE_FONT, plot, true)
+  val chart = new JFreeChart("Histograma del Control", JFreeChart.DEFAULT_TITLE_FONT, plot, true)
   val chartPanel = new ChartPanel(chart)
   chartPanel.setPreferredSize(new Dimension(600, 300))
   chartPanel.setDomainZoomable(false)

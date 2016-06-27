@@ -16,6 +16,11 @@ object CommProtocol {
   // Control Messages
   case class UpdateCoords(coords: (Double, Double))
   case class CalcNoteOutputRequest(markovProbabilities: List[((Int, Int), Double)], xPosition: Double, yPosition: Double)
+  case class UpdateMaxNoteDistanceToControl(distance: Byte)
+  case class UpdateMaxDurationDistanceToControl(distance: Byte)
+  case class UpdateTempo(tempo: Int)
+  case class UpdateOutputNormalization(norm: Byte)
+  case class UpdateK(k: Double)
 
   // Playback Messages
   case class StartMelodyGenerationRequest()

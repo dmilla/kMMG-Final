@@ -15,7 +15,7 @@ import scala.collection.mutable.{HashMap, ListBuffer}
 import scala.collection.parallel.immutable.ParSeq
 import scala.util.matching.Regex
 
-// TODO - improve crawler to download from Mozart
+// TODO - improve crawler to download from more websites
 class WebCrawler extends Actor {
 
   var requestProperties = HashMap(
@@ -27,7 +27,6 @@ class WebCrawler extends Actor {
   var midisFound = 0
   var downloadsPath = System.getProperty("user.home")
 
-  // TODO - add try catch in case codec not supported or other error, just notify "site not supported"
   def crawlUrl(url: String, followIf: String, maxDepth: Int, downloadsDirectory: String) = {
     notify("¡Crawling " + url + "!")
     currentDepth = 0
