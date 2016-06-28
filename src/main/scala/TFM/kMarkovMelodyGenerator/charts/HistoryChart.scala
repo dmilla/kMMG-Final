@@ -7,7 +7,7 @@ import javax.swing.{JFrame, JPanel, JSlider}
 
 import TFM.CommProtocol._
 import TFM.util.SlidingXYDataset
-import akka.actor.{Actor, ActorRef}
+import akka.actor.Actor
 import org.jfree.chart.annotations.XYShapeAnnotation
 import org.jfree.chart.axis.{AxisLocation, NumberAxis, NumberTickUnit}
 import org.jfree.chart.plot.XYPlot
@@ -31,32 +31,32 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
   val ANNOTATION_HEIGHT = 1
 
   val controlNotesCollection = new XYSeriesCollection()
-  val controlNotesData = new XYSeries("Nota")
+  val controlNotesData = new XYSeries("Nota del Control")
   controlNotesData.add(0, 11)
   controlNotesData.add(1, 11)
   controlNotesCollection.addSeries(controlNotesData)
   var slidingNotesCollection = new SlidingXYDataset(controlNotesCollection, firstIndex, WINDOW)
 
   val controlDurationsCollection = new XYSeriesCollection()
-  val controlDurationsData = new XYSeries("Duración")
+  val controlDurationsData = new XYSeries("Duración del Control")
   controlDurationsData.add(0, 4)
   controlDurationsData.add(1, 4)
   controlDurationsCollection.addSeries(controlDurationsData)
   var slidingDurationsCollection = new SlidingXYDataset(controlDurationsCollection, firstIndex, WINDOW)
 
   val renderer = new StandardXYItemRenderer()
-  val noteAxis = new NumberAxis("Control Note")
+  val noteAxis = new NumberAxis("Nota del Control")
   noteAxis.setRange(-1.6, 23.6)
   noteAxis.setTickUnit(new NumberTickUnit(1))
   val plot = new XYPlot(slidingNotesCollection, null, noteAxis, renderer)
   plot.setRangeAxisLocation(AxisLocation.BOTTOM_OR_LEFT)
-  val domainAxis = new NumberAxis("Midi Tick")
+  val domainAxis = new NumberAxis("Tick MIDI")
   domainAxis.setTickUnit(new NumberTickUnit(4))
   domainAxis.setRange(0, WINDOW)
   plot.setDomainAxis(domainAxis)
 
   plot.setDataset(1, slidingDurationsCollection)
-  val durationAxis = new NumberAxis("Control Duration")
+  val durationAxis = new NumberAxis("Duración del Control")
   durationAxis.setTickUnit(new NumberTickUnit(1))
   durationAxis.setRange(0.8, 16.2)
   durationAxis.setTickUnit(new NumberTickUnit(1))

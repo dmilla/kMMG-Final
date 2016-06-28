@@ -32,7 +32,7 @@ class Conductor extends Actor{
   var currentCoords: (Double, Double) = (0.5, 0.5)
   var lastNoteCoords: (Double, Double) = (0.5, 0.5)
 
-  var outNormalization: Byte = 48 // TODO add output normalization to GUI
+  var outNormalization: Byte = 48
   var currentTempo: Int = 120
   var programChange: Byte = 0
 
@@ -51,7 +51,7 @@ class Conductor extends Actor{
     if (!initialized) {
       sequencer.open()
       sequencer.setSequence(sequence)
-      sequencer.setTempoInBPM(currentTempo)// TODO variable tempo add GUI Fields
+      sequencer.setTempoInBPM(currentTempo)
       track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, 12 + outNormalization, 127), 1))
       track.add(currentNoteEndMidiEvent)
       kMMGUI.markovExtractor ! TransitionsRequest(currentState)

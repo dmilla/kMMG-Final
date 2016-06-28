@@ -18,11 +18,10 @@ import scala.swing._
 // TODO - improve web miner + integrate it (directories etc)
 // TODO - add sequencer like UI
 // TODO - only show start/stop melody buttons if model generated previously => BEST POSSIBLE UX!
-// TODO - add playback program change setting
 
 class UI extends MainFrame {
 
-  title = "Controlled Markov Melody Generator - Diego Milla - TFM - Máster SSII - USAL"
+  title = "Kontrolled Markov Melody Generator - Diego Milla - TFM - Máster SSII - USAL"
   preferredSize = new Dimension(1500, 1000)
 
   val midiWebMiner = new WebMinerUI

@@ -11,6 +11,8 @@ import scala.swing._
 /**
   * Created by diego on 27/06/16.
   */
+
+//TODO - estrechar campos de entrada
 class SettingsFrame extends JFrame  with Actor{
 
   setTitle("Ajustes")
@@ -22,7 +24,7 @@ class SettingsFrame extends JFrame  with Actor{
   val labelSize = new Dimension(300, 25)
   val numberFieldSize = new Dimension(60, 25)
 
-  val kLabel = new Label("K (Peso del Control, [0, 1])")
+  val kLabel = new Label("Parámetro K (Peso del Control, [0, 1])")
   val kField = new TextField("0.8")
 
   val tempoLabel = new Label("Tempo (BPM)")

@@ -5,7 +5,7 @@ package TFM.kMarkovMelodyGenerator.charts
   */
 
 import java.awt.geom.{Ellipse2D, Rectangle2D}
-import java.awt.{BasicStroke, Color}
+import java.awt.{BasicStroke, BorderLayout, Color}
 import javax.swing.{JFrame, JPanel}
 
 import TFM.CommProtocol._
@@ -31,10 +31,9 @@ class JoystickChart extends JFrame with Actor{
   lazy val durations = List(1, 2, 3, 4, 6, 8, 12, 16)
   val transitionsAnnotations = ListBuffer.empty[XYShapeAnnotation]
 
-  setTitle("Joystick Position")
+  setTitle("Posición del Joystick")
   setSize(new Dimension(800, 630))
   setLocation(900, 0)
-  val parentPanel = new JPanel()
   val chartPanel = createChartPanel
   chartPanel.setDomainZoomable(false)
   chartPanel.setRangeZoomable(false)
@@ -52,8 +51,7 @@ class JoystickChart extends JFrame with Actor{
 
   })
 
-  parentPanel.add(chartPanel)
-  add(parentPanel)
+  add(chartPanel)
 
   def getMouseCoords(mouseChartEvent: ChartMouseEvent): Boolean = {
     if (manualControl) {
@@ -70,7 +68,7 @@ class JoystickChart extends JFrame with Actor{
   }
 
   def createChartPanel: ChartPanel = {
-    val jfreechart = ChartFactory.createScatterPlot("Joystick Position", "X", "Y", createDatasetFromPoint(lastX, lastY), PlotOrientation.VERTICAL, true, true, false)
+    val jfreechart = ChartFactory.createScatterPlot("Posición del Joystick", "X", "Y", createDatasetFromPoint(lastX, lastY), PlotOrientation.VERTICAL, true, true, false)
     val xyPlot = jfreechart.getXYPlot
     xyPlot.setDomainCrosshairVisible(true)
     xyPlot.setRangeCrosshairVisible(true)
@@ -78,9 +76,10 @@ class JoystickChart extends JFrame with Actor{
     renderer.setSeriesPaint(0, Color.blue)
     val domain = xyPlot.getDomainAxis
     domain.setRange(0.00, 1.00)
-    domain.setVerticalTickLabels(true)
+    domain.setLabel("Duración (Semicorchea --> Redonda)")
     val range = xyPlot.getRangeAxis
     range.setRange(0.0, 1.0)
+    range.setLabel("Nota (Silencio -> Grave -> Agudo)")
     new ChartPanel(jfreechart)
   }
 
@@ -168,7 +167,7 @@ class JoystickChart extends JFrame with Actor{
     if (y > 1) drawY = 1
     if (y < 0) drawY = 0
     val xySeriesCollection = new XYSeriesCollection()
-    val series = new XYSeries("Current Position")
+    val series = new XYSeries("Posición Actual")
     series.add(x, y)
     xySeriesCollection.addSeries(series)
     xySeriesCollection

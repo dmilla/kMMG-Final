@@ -17,7 +17,6 @@ class KController extends Actor{
   val formatter = new DecimalFormat("#.##")
   val durations = List(1, 2, 3, 4, 6, 8, 12, 16)
 
-  //TODO - add max distance to control GUI setting
   def calcNoteOutput(markovProbabilites: List[((Int, Int), Double)], xPosition: Double, yPosition: Double) = {
     val controlNote = (24 * yPosition).round.toInt - 1 // Normalized to two octaves and -1 for silence
     val controlDurationIndex = (7 * xPosition).round.toInt // Normalized to 8 possible durations

@@ -36,7 +36,7 @@ class BytePublisher extends ActorPublisher[ByteString] {
     }
   }
 
-  def notify(msg: String) = kMMGUI.addOutput(msg) // TODO - notify or simply println for dev msgs?
+  def notify(msg: String) = kMMGUI.addOutput(msg)
 }
 
 case class Publish[D](data: D)
