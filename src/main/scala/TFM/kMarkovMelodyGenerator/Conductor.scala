@@ -175,7 +175,7 @@ class Conductor extends Actor{
   def updateOutNormalization(norm: Byte): Boolean = {
     if (norm != outNormalization) {
       outNormalization = norm
-      notify("Normalización actualizada exitosamente, octava inicial actual: " + norm/24)
+      notify("Normalización actualizada exitosamente, octava inicial actual: " + norm/12)
       true
     } else false
   }

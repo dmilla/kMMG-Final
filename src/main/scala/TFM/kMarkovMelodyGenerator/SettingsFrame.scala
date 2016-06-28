@@ -47,9 +47,10 @@ class SettingsFrame extends JFrame  with Actor{
     kMMGUI.kController ! UpdateK(kField.text.toDouble)
     kMMGUI.conductor ! UpdateTempo(tempoField.text.toInt)
     kMMGUI.kController ! UpdateMaxNoteDistanceToControl(noteDistanceField.peer.getSelectedItem.toString.toByte)
-    kMMGUI.conductor ! UpdateOutputNormalization((normField.peer.getSelectedItem.toString.toInt * 24).toByte)
+    kMMGUI.conductor ! UpdateOutputNormalization((normField.peer.getSelectedItem.toString.toInt * 12).toByte)
     kMMGUI.kController ! UpdateMaxDurationDistanceToControl(durationDistanceField.peer.getSelectedItem.toString.toByte)
     kMMGUI.conductor ! UpdateProgramChange(programChangeField.peer.getSelectedItem.toString.toByte)
+    dispose()
   }
 
   val settingsPanel = new BoxPanel(Orientation.Vertical) {
