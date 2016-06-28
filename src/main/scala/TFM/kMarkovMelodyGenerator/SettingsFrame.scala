@@ -3,7 +3,7 @@ package TFM.kMarkovMelodyGenerator
 import java.awt.{BorderLayout, Dimension}
 import javax.swing.{JFrame, JPanel}
 
-import TFM.CommProtocol.SetVisible
+import TFM.CommProtocol._
 import akka.actor.Actor
 
 import scala.swing._
@@ -43,8 +43,13 @@ class SettingsFrame extends JFrame  with Actor{
   val programChangeLabel = new Label("Instrumento (MIDI Program Change)")
   val programChangeField = new ComboBox(0 to 127)
 
-  val saveButton = new Button("Guardar Cambios"){
-
+  val saveButton = Button("Guardar Cambios"){
+    kMMGUI.kController ! UpdateK(kField.text.toDouble)
+    kMMGUI.conductor ! UpdateTempo(tempoField.text.toInt)
+    kMMGUI.kController ! UpdateMaxNoteDistanceToControl(noteDistanceField.peer.getSelectedItem.toString.toByte)
+    kMMGUI.conductor ! UpdateOutputNormalization((normField.peer.getSelectedItem.toString.toInt * 24).toByte)
+    kMMGUI.kController ! UpdateMaxDurationDistanceToControl(durationDistanceField.peer.getSelectedItem.toString.toByte)
+    kMMGUI.conductor ! UpdateProgramChange(programChangeField.peer.getSelectedItem.toString.toByte)
   }
 
   val settingsPanel = new BoxPanel(Orientation.Vertical) {

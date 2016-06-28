@@ -34,6 +34,7 @@ class Conductor extends Actor{
 
   var outNormalization: Byte = 48 // TODO add output normalization to GUI
   var currentTempo: Int = 120
+  var programChange: Byte = 0
 
   var initialized: Boolean = false
   var started: Boolean = false
@@ -162,7 +163,7 @@ class Conductor extends Actor{
     true
   }
 
-  def changeTempo(tempo: Int): Boolean = {
+  def updateTempo(tempo: Int): Boolean = {
     if (tempo != currentTempo) {
       sequencer.setTempoInBPM(tempo)
       currentTempo = tempo
@@ -171,10 +172,19 @@ class Conductor extends Actor{
     } else false
   }
 
-  def changeOutNormalization(norm: Byte): Boolean = {
+  def updateOutNormalization(norm: Byte): Boolean = {
     if (norm != outNormalization) {
       outNormalization = norm
       notify("Normalización actualizada exitosamente, octava inicial actual: " + norm/24)
+      true
+    } else false
+  }
+
+  def updateProgramChange(newProgramChange: Byte): Boolean = {
+    if (newProgramChange != programChange) {
+      programChange = newProgramChange
+      track.add(new MidiEvent(new ShortMessage(ShortMessage.PROGRAM_CHANGE, 0, programChange, 0), currentTick + 1))
+      notify("Instrumento actualizado exitosamente, MIDI program change actual: " + programChange)
       true
     } else false
   }
@@ -191,8 +201,9 @@ class Conductor extends Actor{
       currentStateTransitions = list
       notify("\nConductor received new transitions list!!!\n")
     case SaveMidiTrackRequest => saveMidiTrack
-    case UpdateTempo(tempo: Int) => changeTempo(tempo)
-    case UpdateOutputNormalization(norm: Byte) => changeOutNormalization(norm)
+    case UpdateTempo(tempo: Int) => updateTempo(tempo)
+    case UpdateOutputNormalization(norm: Byte) => updateOutNormalization(norm)
+    case UpdateProgramChange(programChange: Byte) => updateProgramChange(programChange)
     case _ ⇒ println("Conductor received unknown message")
   }
 
