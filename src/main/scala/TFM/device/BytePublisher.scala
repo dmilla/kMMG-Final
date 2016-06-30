@@ -21,7 +21,7 @@ class BytePublisher extends ActorPublisher[ByteString] {
     case Publish(b: ByteString) =>
       if (queue.isEmpty && b.size == 4) queue.enqueue(b)
       else if (queue.isEmpty) queue.enqueue(ByteString(0.toByte, 0.toByte, 0.toByte, 0.toByte))
-      else notify("BytePublisher received another request but queue is already full")
+      //else notify("BytePublisher received another request but queue is already full")
       //publishIfNeeded()
     case Request(cnt) =>
       publishIfNeeded()
@@ -31,7 +31,7 @@ class BytePublisher extends ActorPublisher[ByteString] {
 
   def publishIfNeeded() = {
     while (queue.nonEmpty && isActive && totalDemand > 0) {
-      notify("\nforce sent! " + queue(0) + "\n")
+      //notify("\nforce sent! " + queue(0) + "\n")
       onNext(queue.dequeue())
     }
   }

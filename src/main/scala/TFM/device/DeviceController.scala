@@ -2,7 +2,7 @@ package TFM.device
 
 import java.nio.{ByteBuffer, ByteOrder}
 
-import TFM.CommProtocol.{ConnectToDeviceRequest, EndManualControlRequest, UpdateCoords, UpdateFeedbackForce}
+import TFM.CommProtocol._
 import TFM.kMarkovMelodyGenerator.kMMGUI
 import akka.actor.{Actor, Props}
 import akka.stream.ActorMaterializer
@@ -32,10 +32,13 @@ class DeviceController extends Actor{
   val DISTANCE_FROM_CENTER_TO_MOTORS: Float = 3.0f
   val ARM_LENGTH_1: Float = 27.0f
   val ARM_LENGTH_2: Float = 30.0f
+  val durations = List(1, 2, 3, 4, 6, 8, 12, 16)
 
   var initialSensorValues: (Short, Short) = (-1, -1)
   var currentCoords: (Float, Float) = (-1, -1)
+  var currentNormalizedCoords: (Double, Double) = (-1, -1)
   var lastArmsAngles: (Float, Float) = (-1, -1)
+  var currentMostProbableTransition: ((Int, Int), Double) = ((-1, -1), -1)
   val jacobian = Array.ofDim[Float](2,2)
 
 
@@ -62,12 +65,12 @@ class DeviceController extends Actor{
       Serial().open(port, DEVICE_SETTINGS)
 
     val printer: Sink[ByteString, _] = Sink.foreach[ByteString]{data =>
-      notify("device says bulk: " + data.toString)
+      //notify("device says bulk: " + data.toString)
       if (data.size == 4) {
         badResponses = 0
         val shorts = convert(data.seq)
         if (shorts.size == 2) { // TODO - negative values = 4096 - value????
-          notify("device says (shorts): " + shorts(0) + " / " + shorts(1))
+          //notify("device says (shorts): " + shorts(0) + " / " + shorts(1))
           if (initialSensorValues ==(-1, -1) || (calibrated == false && initialSensorValues != (shorts(0), shorts(1)))) {
             initialSensorValues = (shorts(0), shorts(1))
             calibrated = true
@@ -77,7 +80,7 @@ class DeviceController extends Actor{
         bytePublisherRef ! Publish(deviceTorque)
       } else {
         badResponses += 1
-        notify("Less than 4 bytes received from device! Consecutive times: " + badResponses)
+        //notify("Less than 4 bytes received from device! Consecutive times: " + badResponses)
         bytePublisherRef ! Publish(deviceTorque)
       }
     }
@@ -147,17 +150,31 @@ class DeviceController extends Actor{
     jacobian(1)(1) = (py + ARM_LENGTH_1 * Math.sin(angle2)).toFloat
 
     val normalizedCoords = normalizeCoords(px, py)
-    notify("Coordinates calculated! X: " + px + " - Y: " + py + " // Normalized values: " + normalizedCoords)
+    //notify("Coordinates calculated! X: " + px + " - Y: " + py + " // Normalized values: " + normalizedCoords)
     kMMGUI.conductor ! UpdateCoords(normalizedCoords)
     kMMGUI.joystickChart ! UpdateCoords(normalizedCoords)
   }
 
-  //TODO verify X axis is between -48/48 and reduce total output (corners can't be reached!)
   //This method normalizes coords between 0 and 1
   def normalizeCoords(x: Double, y: Double): (Double, Double) = {
-    val normX = (x + 48)/96 // Device X axis is between -48 and 48
-    val normY = (y + 56.85)/56.85 // Device Y axis is between -56.85 and 0
-    (normX, normY)
+    val normX = (Math.min(26, Math.max(x, -26)) + 26)/52
+    val normY = Math.min((Math.max(y, -35) + 35)/26, 1)
+    currentNormalizedCoords = (normX, normY)
+    updateFeedbackForce
+    currentNormalizedCoords
+  }
+
+  def updateFeedbackForce = {
+    if (currentMostProbableTransition._2 > 0) {
+      val controlDurationIndex = (7 * currentNormalizedCoords._1).round.toInt // Normalized to 8 possible durations
+      val controlDuration = durations(controlDurationIndex)
+      val controlNote = (23 * currentNormalizedCoords._2).round.toInt
+      //TODO @ LAB - verify force feedback direction and scaling
+      val scaling = 0.08f
+      val xVector: Float = (currentMostProbableTransition._1._2 - controlDuration).toFloat * scaling
+      val yVector: Float = (currentMostProbableTransition._1._1 - controlNote).toFloat * scaling
+      calcVirtualForce((xVector, yVector))
+    }
   }
 
   def calcVirtualForce(forceVector: (Float, Float)): ByteString = {
@@ -180,7 +197,7 @@ class DeviceController extends Actor{
 
     //out[0] = -tau1;
     //out[1] = tau2;
-    //notify(-tau1 + " " + tau2)
+    notify("new torque for vector " + forceVector + " - taus sent: " + -tau1 + " " + tau2)
     val res = ByteString(shortToBytes((-tau1).toShort) ++ shortToBytes(tau2.toShort))
     deviceTorque = res
     res
@@ -201,7 +218,8 @@ class DeviceController extends Actor{
 
   def receive: Receive = {
     case ConnectToDeviceRequest(port) => connectToDeviceStream(port)
-    case UpdateFeedbackForce(forceVector: (Float, Float)) => calcVirtualForce(forceVector)
+    case MostProbableTransition(transition: ((Int, Int), Double)) => currentMostProbableTransition = transition
+    //case UpdateFeedbackForce(forceVector: (Float, Float)) => calcVirtualForce(forceVector)
     /*case Serial.Received(data) => {
       println("Received data: " + data.toString)
     }

@@ -13,7 +13,7 @@ import scala.swing._
   */
 
 //TODO - estrechar campos de entrada
-class SettingsFrame extends JFrame  with Actor{
+class SettingsFrame extends JFrame with Actor{
 
   setTitle("Ajustes")
   setSize(new Dimension(900, 300))
@@ -52,7 +52,7 @@ class SettingsFrame extends JFrame  with Actor{
     kMMGUI.conductor ! UpdateOutputNormalization((normField.peer.getSelectedItem.toString.toInt * 12).toByte)
     kMMGUI.kController ! UpdateMaxDurationDistanceToControl(durationDistanceField.peer.getSelectedItem.toString.toByte)
     kMMGUI.conductor ! UpdateProgramChange(programChangeField.peer.getSelectedItem.toString.toByte)
-    dispose()
+    //dispose()
   }
 
   val settingsPanel = new BoxPanel(Orientation.Vertical) {

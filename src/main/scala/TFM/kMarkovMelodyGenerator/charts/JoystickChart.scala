@@ -59,10 +59,10 @@ class JoystickChart extends JFrame with Actor{
       val p = chartPanel.translateScreenToJava2D(mouseChartEvent.getTrigger.getPoint)
       //kMMGUI.addOutput(p.getX.toString + " - " + p.getY.toString)
       val plotArea = chartPanel.getScreenDataArea
-      lastX = plot.getDomainAxis.java2DToValue(p.getX, plotArea, plot.getDomainAxisEdge)
-      lastY = plot.getRangeAxis.java2DToValue(p.getY, plotArea, plot.getRangeAxisEdge)
-      kMMGUI.conductor ! UpdateCoords((lastX, lastY))
-      refreshChart(lastX, lastY)
+      val x = plot.getDomainAxis.java2DToValue(p.getX, plotArea, plot.getDomainAxisEdge)
+      val y = plot.getRangeAxis.java2DToValue(p.getY, plotArea, plot.getRangeAxisEdge)
+      kMMGUI.conductor ! UpdateCoords((x, y))
+      refreshChart(x, y)
       true
     } else false
   }
@@ -137,6 +137,8 @@ class JoystickChart extends JFrame with Actor{
   }*/
 
   def refreshChart(coords: (Double, Double)) = {
+    lastX = coords._1
+    lastY = coords._2
     chartPanel.getChart.getXYPlot.setDataset(createDatasetFromPoint(coords._1, coords._2))
     removeAnnotation(controlRangeAnnotation)
     controlRangeAnnotation = createControlRangeAnnotation
@@ -187,8 +189,18 @@ class JoystickChart extends JFrame with Actor{
   def receive: Receive = {
     case SetVisible => setVisible(true)
     case EndManualControlRequest => manualControl = false
-    case UpdateCoords(coords) => if(!manualControl) refreshChart(coords)
-    case TransitionsList(list: List[((Int, Int), Double)]) => drawPossibleTransitions(list)
+    case UpdateCoords(coords) =>
+      try {
+        if(!manualControl) refreshChart(coords)
+      } catch {
+        case e: Exception => println("JoystickChart - Excepción actualizando posición: " + e)
+      }
+    case TransitionsList(list: List[((Int, Int), Double)]) =>
+      try {
+        drawPossibleTransitions(list)
+      } catch {
+        case e: Exception => println("JoystickChart - Excepción dibujando transiciones: " + e)
+      }
     case _ ⇒ println("JoystickChart received unknown message")
   }
 

@@ -12,6 +12,7 @@ object CommProtocol {
   case class HMMExtractionRequest(path: String)
   case class TransitionsRequest(status: (Int, Int))
   case class TransitionsList(list: List[((Int, Int), Double)])
+  case class MostProbableTransition(transition: ((Int, Int), Double))
 
   // Control Messages
   case class UpdateCoords(coords: (Double, Double))

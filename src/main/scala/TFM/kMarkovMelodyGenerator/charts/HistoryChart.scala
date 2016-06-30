@@ -132,15 +132,28 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
 
   def receive: Receive = {
     case SetVisible => setVisible(true)
-    case UpdateHistogram(controlNote: Int, controlDuration: Int, tick: Long) => {
-      controlNotesData.add(tick, controlNote)
-      controlDurationsData.add(tick, controlDuration)
-      if (tick > WINDOW) {
-        updateDomain(tick.toInt)
+    case UpdateHistogram(controlNote: Int, controlDuration: Int, tick: Long) =>
+      try {
+        controlNotesData.add(tick, controlNote)
+        controlDurationsData.add(tick, controlDuration)
+        if (tick > WINDOW) {
+          updateDomain(tick.toInt)
+        }
+      } catch {
+        case e: Exception => println("HistoryChart - Excepción actualizando histograma: " + e)
       }
-    }
-    case DrawNote(tick: Long, note: Int, duration: Int) => addAnnotation(createNoteAnnotation(note, tick.toInt, duration))
-    case DrawNoteCut(tick: Long, note: Int) => addAnnotation(createCutAnnotation(note, tick.toInt))
+    case DrawNote(tick: Long, note: Int, duration: Int) =>
+      try {
+        addAnnotation(createNoteAnnotation(note, tick.toInt, duration))
+      } catch {
+        case e: Exception => println("HistoryChart - Excepción dibujando nota: " + e)
+      }
+    case DrawNoteCut(tick: Long, note: Int) =>
+      try {
+        addAnnotation(createCutAnnotation(note, tick.toInt))
+      } catch {
+        case e: Exception => println("HistoryChart - Excepción dibujando corte de nota: " + e)
+      }
     case _ ⇒ println("HistoryChart received unknown message")
   }
 

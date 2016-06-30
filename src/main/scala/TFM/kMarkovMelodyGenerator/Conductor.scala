@@ -80,7 +80,7 @@ class Conductor extends Actor{
   }
 
   def updateSequencerTick(tick: Long) = {
-    notify("New Sequencer tick reached! " + tick)
+    //notify("New Sequencer tick reached! " + tick)
     currentTick = tick
     val controlDurationIndex = (7 * currentCoords._1).round.toInt // Normalized to 8 possible durations
     val controlDuration = durations(controlDurationIndex)
@@ -94,11 +94,13 @@ class Conductor extends Actor{
         requestNextNote()
       }
     }
-    else updateFeedbackForce(controlNote, controlDuration)
+    //else updateFeedbackForce(controlNote, controlDuration)
   }
 
-  def updateFeedbackForce(controlNote: Int, controlDuration: Int) = {
-    var lowNearestNote = (-1, 0.0)
+  /*def updateFeedbackForce(controlNote: Int, controlDuration: Int) = {
+    val mostProbableTransition = currentStateTransitions.reduceLeft(mostProbable)
+    notify("mostProbableTransition is: " + mostProbableTransition)
+    /*var lowNearestNote = (-1, 0.0)
     var highNearestNote = (23, 0.0)
     var shortNearestDuration = (1, 0.0)
     var longNearestDuration = (16, 0.0)
@@ -110,13 +112,15 @@ class Conductor extends Actor{
         if (noteDistance > 0 && noteDistance <= highNearestNote._1 - controlNote) highNearestNote = (note, prob)
         if (durationDistance < 0 && durationDistance >= shortNearestDuration._1 - controlDuration) shortNearestDuration = (duration, prob)
         if (durationDistance > 0 && durationDistance <= longNearestDuration._1) longNearestDuration = (duration, prob)
-    }
+    }*/
     //TODO @ LAB - verify force feedback direction and scaling
-    val scaling = 100
-    val xVector: Float = (shortNearestDuration._2 - longNearestDuration._2).toFloat * scaling
-    val yVector: Float = (lowNearestNote._2 - highNearestNote._2).toFloat * scaling
+    val scaling = 8
+    val xVector: Float = (mostProbableTransition._1._2 - controlDuration).toFloat * scaling
+    val yVector: Float = (mostProbableTransition._1._1 - controlNote).toFloat * scaling
     kMMGUI.deviceController ! UpdateFeedbackForce((xVector, yVector))
-  }
+  }*/
+
+  def mostProbable(t1: ((Int, Int), Double), t2: ((Int, Int), Double)): ((Int, Int), Double) = if (t1._2 > t2._2) t1 else t2
 
   def addNextNote(note: (Int, Int)) = {
     val currentNoteEndTick = currentNoteEndMidiEvent.getTick
@@ -199,7 +203,8 @@ class Conductor extends Actor{
     case TransitionsList(list: List[((Int, Int), Double)]) =>
       kMMGUI.joystickChart ! TransitionsList(list)
       currentStateTransitions = list
-      notify("\nConductor received new transitions list!!!\n")
+      kMMGUI.deviceController ! MostProbableTransition(currentStateTransitions.reduceLeft(mostProbable))
+      //notify("\nConductor received new transitions list!!!\n")
     case SaveMidiTrackRequest => saveMidiTrack
     case UpdateTempo(tempo: Int) => updateTempo(tempo)
     case UpdateOutputNormalization(norm: Byte) => updateOutNormalization(norm)

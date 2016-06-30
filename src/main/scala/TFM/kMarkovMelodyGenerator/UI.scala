@@ -41,7 +41,7 @@ class UI extends MainFrame {
   val numberFieldSize = new Dimension(60, 25)
 
   val outputField = new TextArea { rows = 26; lineWrap = true; wordWrap = true; editable = false }
-  val defaultPathFile = new File(System.getProperty("user.home") + "/MidiWebMiner/mozart/test/notes with duration/Piano") // TODO inicializar directorio en carpeta general
+  val defaultPathFile = new File(System.getProperty("user.home") + "/MidiWebMiner/new/beethoven/notes with duration/Piano") // TODO inicializar directorio en carpeta general
   //defaultPathFile.mkdirs
   val notesDirChooser = new FileChooser(defaultPathFile)
   val notesDirField = new TextField( defaultPathFile.getAbsolutePath )
