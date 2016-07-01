@@ -3,18 +3,19 @@ package TFM.util
 import java.io.File
 import java.text.NumberFormat
 
-import TFM.CommProtocol.{HMMExtractionRequest, TransitionsList, TransitionsRequest}
+import TFM.CommProtocol._
 import TFM.kMarkovMelodyGenerator.kMMGUI
 import TFM.util.SplitToTuple._
 import akka.actor.Actor
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
   * Created by diego on 6/05/16.
   */
 class MarkovExtractor extends Actor{
 
+  var order: Byte = 3
   var markovChain = new MarkovChain[(Int, Int)]()
   val durations = List(1, 2, 3, 4, 6, 8, 12, 16)
 
@@ -34,18 +35,23 @@ class MarkovExtractor extends Actor{
       }
     }
     val normalizedNotesWithDurations = normalizeNotesAndDurations(notesWithDuration)
-    var prevStatus = (999, 999)
+    val prevStatus = new FixedList[(Int, Int)](order)
     var transitionsCount = 0
     normalizedNotesWithDurations.foreach { case (note: Int, duration: Int) =>
-      if (prevStatus == (999, 999)) {
-        prevStatus = (note, duration)
+      if (!prevStatus.full) {
+        prevStatus.append((note, duration))
       } else {
-        markovChain = markovChain.addTransition(prevStatus, (note, duration))
+        val statusList = ListBuffer.empty[(Int, Int)]
+        prevStatus.foreach(statusList += _)
+        markovChain = markovChain.addTransition(statusList, (note, duration))
         transitionsCount += 1
-        prevStatus = (note, duration)
+        prevStatus.append((note, duration))
+        //notify("prevStatus: " + prevStatus)
       }
     }
-    markovChain = markovChain.addTransition(normalizedNotesWithDurations.last, normalizedNotesWithDurations.head) // asegurarse de que siempre existen transiciones para cada estado
+    kMMGUI.conductor ! InitializeState(prevStatus)
+    markovChain = markovChain.addTransition(prevStatus.list, normalizedNotesWithDurations.head) // asegurarse de que siempre existen transiciones para cada estado
+    kMMGUI.conductor ! TransitionsList(markovChain.transitionsFor(prevStatus.list))
     notify(markovChain.states().toString())
     markovChain.states().foreach( state =>
       notify("transitions for " + state + ": " + markovChain.transitionsFor(state).toString())
@@ -100,8 +106,9 @@ class MarkovExtractor extends Actor{
   def notify(msg: String) = kMMGUI.addOutput(msg)
 
   def receive = {
-    case TransitionsRequest(state: (Int, Int)) => sender ! TransitionsList(markovChain.transitionsFor((normalizeNote(state._1), normalizeDuration(state._2))))
+    case TransitionsRequest(state: FixedList[(Int, Int)]) => sender ! TransitionsList(markovChain.transitionsFor(state.list)) // TODO - verify normalization is not needed
     case HMMExtractionRequest(path) => extractMarkovChain(path)
+    case UpdateMarkovOrder(newOrder: Byte) => order = newOrder
     case _ ⇒ println("FeaturesExtractor received unknown message")
   }
 

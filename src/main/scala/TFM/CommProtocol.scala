@@ -2,6 +2,8 @@ package TFM
 
 import java.io.File
 
+import TFM.util.FixedList
+
 /**
   * Created by diego on 30/03/16.
   * */
@@ -10,8 +12,10 @@ object CommProtocol {
 
   // Markov-related Messages
   case class HMMExtractionRequest(path: String)
-  case class TransitionsRequest(status: (Int, Int))
+  case class UpdateMarkovOrder(order: Byte)
+  case class TransitionsRequest(status: FixedList[(Int, Int)])
   case class TransitionsList(list: List[((Int, Int), Double)])
+  case class InitializeState(state: FixedList[(Int, Int)])
   case class MostProbableTransition(transition: ((Int, Int), Double))
 
   // Control Messages

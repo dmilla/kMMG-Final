@@ -6,6 +6,7 @@ import java.util.Calendar
 import javax.sound.midi._
 
 import TFM.CommProtocol._
+import TFM.util.FixedList
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -27,7 +28,7 @@ class Conductor extends Actor{
   val sequence = new Sequence(Sequence.PPQ, 4)
   val track = sequence.createTrack()
 
-  var currentState: (Int, Int) = (0, 4)
+  var currentState: FixedList[(Int, Int)] = new FixedList[(Int, Int)](3)
   var currentStateTransitions: List[((Int, Int), Double)] = List.empty[((Int, Int), Double)]
   var currentCoords: (Double, Double) = (0.5, 0.5)
   var lastNoteCoords: (Double, Double) = (0.5, 0.5)
@@ -48,15 +49,20 @@ class Conductor extends Actor{
   var tickChecker = sequencerSystem.scheduler.schedule(1 milliseconds, 1 millisecond)(sequencerWatcher ! CheckSequencerTick)
 
   def initializeSequencer = {
-    if (!initialized) {
+    if (!initialized && currentState.full && !currentStateTransitions.isEmpty) {
       sequencer.open()
       sequencer.setSequence(sequence)
       sequencer.setTempoInBPM(currentTempo)
-      track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, 12 + outNormalization, 127), 1))
-      track.add(currentNoteEndMidiEvent)
-      kMMGUI.markovExtractor ! TransitionsRequest(currentState)
+      //track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, 12 + outNormalization, 127), 1))
+      //track.add(currentNoteEndMidiEvent)
+      //kMMGUI.markovExtractor ! TransitionsRequest(currentState)
+      requestNextNote()
+      initialized = true
+      true
+    } else {
+      notify("No se ha podido inicializar el secuenciador, es necesario generar el modelo de Markov previamente.")
+      false
     }
-    true
   }
 
   def startMelodyGeneration() = {
@@ -66,7 +72,7 @@ class Conductor extends Actor{
       sequencer.start()
       started = true
     } else {
-      notify("Melody generation already started")
+      notify("La melodía ya se está generando")
     }
   }
 
@@ -75,7 +81,7 @@ class Conductor extends Actor{
       sequencer.stop()
       started = false
     } else {
-      notify("Melody generation already stopped")
+      notify("La melodía ya está parada")
     }
   }
 
@@ -88,7 +94,7 @@ class Conductor extends Actor{
     kMMGUI.historyChart ! UpdateHistogram(controlNote, controlDuration, currentTick)
     if (currentTick >= currentNoteEndMidiEvent.getTick- 1) requestNextNote()
     else if (currentCoords._1 < lastNoteCoords._1) {
-      val currentNoteElapsed = currentTick - (currentNoteEndMidiEvent.getTick - currentState._2)
+      val currentNoteElapsed = currentTick - (currentNoteEndMidiEvent.getTick - currentState.last._2)
       if (currentNoteElapsed > controlDuration) {
         cutCurrentNote()
         requestNextNote()
@@ -130,7 +136,7 @@ class Conductor extends Actor{
     else track.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, note._1 + outNormalization, 0), currentNoteEndTick))
     currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, note._1 + outNormalization, 127), endTick)
     track.add(currentNoteEndMidiEvent)
-    currentState = note
+    currentState.append(note)
     kMMGUI.historyChart ! DrawNote(currentNoteEndTick, note._1, note._2)
     kMMGUI.markovExtractor ! TransitionsRequest(currentState)
     lastNoteCoords = currentCoords
@@ -139,9 +145,9 @@ class Conductor extends Actor{
   def cutCurrentNote() = {
     track.remove(currentNoteEndMidiEvent)
     val currentNoteEndTick = currentTick + 1
-    currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, currentState._1 + outNormalization, 127), currentNoteEndTick)
+    currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, currentState.last._1 + outNormalization, 127), currentNoteEndTick)
     track.add(currentNoteEndMidiEvent)
-    kMMGUI.historyChart ! DrawNoteCut(currentNoteEndTick, currentState._1)
+    kMMGUI.historyChart ! DrawNoteCut(currentNoteEndTick, currentState.last._1)
   }
 
   def requestNextNote() = {
@@ -200,6 +206,7 @@ class Conductor extends Actor{
     case StopMelodyGenerationRequest => stopMelodyGeneration()
     case NewSequencerTick(tick: Long) => updateSequencerTick(tick)
     case UpdateCoords(coords) => currentCoords = coords
+    case InitializeState(state: FixedList[(Int, Int)]) => currentState = state
     case TransitionsList(list: List[((Int, Int), Double)]) =>
       kMMGUI.joystickChart ! TransitionsList(list)
       currentStateTransitions = list

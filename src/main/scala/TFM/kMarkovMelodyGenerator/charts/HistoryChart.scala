@@ -82,7 +82,7 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
   parentPanel.add(slider)
   add(parentPanel, BorderLayout.SOUTH)
 
-  addAnnotation(createNoteAnnotation(11, 0, 4))
+  //addAnnotation(createNoteAnnotation(11, 0, 4))
 
   def addAnnotation(annotation: XYShapeAnnotation) = {
     renderer.addAnnotation(annotation, Layer.BACKGROUND)

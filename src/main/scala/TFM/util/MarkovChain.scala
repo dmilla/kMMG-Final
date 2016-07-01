@@ -1,18 +1,21 @@
 package TFM.util
 
+import scala.collection.mutable.ListBuffer
+
 /**
   * Created by diego on 7/05/16.
   */
 
-class MarkovChain[S](transitionMap: Map[S, MarkovTransitionSet[S]]) {
+class MarkovChain[S](transitionMap: Map[ListBuffer[S], MarkovTransitionSet[S]]) {
 
   /**
     * Default constructors creates an empty Markov Chain
     */
-  def this() = this(Map[S, MarkovTransitionSet[S]]())
+
+  def this() = this(Map[ListBuffer[S], MarkovTransitionSet[S]]())
 
   // Create a new MarkovChain.
-  def addTransition(prevState: S, nextState: S) = {
+  def addTransition(prevState: ListBuffer[S], nextState: S) = {
     val transitions =
       if (transitionMap.contains(prevState)) transitionMap(prevState)
       else new MarkovTransitionSet[S]()
@@ -21,14 +24,14 @@ class MarkovChain[S](transitionMap: Map[S, MarkovTransitionSet[S]]) {
     new MarkovChain(transitionMap.updated(prevState, newTransitions))
   }
 
-  def transitionProbability(state1: S, state2: S) = {
-    transitionMap.get(state1) match {
-      case Some(transitionSet) => transitionSet.probabilityFor(state2)
+  def transitionProbability(prevStates: ListBuffer[S], nextState: S) = {
+    transitionMap.get(prevStates) match {
+      case Some(transitionSet) => transitionSet.probabilityFor(nextState)
       case None => 0.toDouble
     }
   }
 
-  def transitionsFor(state: S) = {
+  def transitionsFor(state: ListBuffer[S]) = {
     transitionMap.get(state) match {
       case Some(transitionSet) => transitionSet.toList
       case None => List[(S, Double)]()
