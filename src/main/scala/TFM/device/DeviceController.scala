@@ -61,7 +61,7 @@ class DeviceController extends Actor{
     notify("intentando conectar a " +  port)
 
     val serial: Flow[ByteString, ByteString, Future[Serial.Connection]] =
-      //Serial().open(port, DEVICE_SETTINGS, false, BUFFER_SIZE) // TODO - try stream connection without specific buffer size
+      //Serial().open(port, DEVICE_SETTINGS, false, BUFFER_SIZE)
       Serial().open(port, DEVICE_SETTINGS)
 
     val printer: Sink[ByteString, _] = Sink.foreach[ByteString]{data =>
@@ -69,7 +69,7 @@ class DeviceController extends Actor{
       if (data.size == 4) {
         badResponses = 0
         val shorts = convert(data.seq)
-        if (shorts.size == 2) { // TODO - negative values = 4096 - value????
+        if (shorts.size == 2) {
           //notify("device says (shorts): " + shorts(0) + " / " + shorts(1))
           if (initialSensorValues ==(-1, -1) || (calibrated == false && initialSensorValues != (shorts(0), shorts(1)))) {
             initialSensorValues = (shorts(0), shorts(1))
@@ -169,7 +169,6 @@ class DeviceController extends Actor{
       val controlDurationIndex = (7 * currentNormalizedCoords._1).round.toInt // Normalized to 8 possible durations
       val controlDuration = durations(controlDurationIndex)
       val controlNote = (23 * currentNormalizedCoords._2).round.toInt
-      //TODO @ LAB - verify force feedback direction and scaling
       val scaling = 0.08f
       val xVector: Float = (currentMostProbableTransition._1._2 - controlDuration).toFloat * scaling
       val yVector: Float = (currentMostProbableTransition._1._1 - controlNote).toFloat * scaling

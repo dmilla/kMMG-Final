@@ -100,28 +100,6 @@ class Conductor extends Actor{
     //else updateFeedbackForce(controlNote, controlDuration)
   }
 
-  /*def updateFeedbackForce(controlNote: Int, controlDuration: Int) = {
-    val mostProbableTransition = currentStateTransitions.reduceLeft(mostProbable)
-    notify("mostProbableTransition is: " + mostProbableTransition)
-    /*var lowNearestNote = (-1, 0.0)
-    var highNearestNote = (23, 0.0)
-    var shortNearestDuration = (1, 0.0)
-    var longNearestDuration = (16, 0.0)
-    currentStateTransitions.foreach{
-      case((note: Int, duration: Int), prob: Double) =>
-        val noteDistance = note - controlNote
-        val durationDistance = duration - controlDuration
-        if (noteDistance < 0 && noteDistance >= lowNearestNote._1 - controlNote) lowNearestNote = (note, prob)
-        if (noteDistance > 0 && noteDistance <= highNearestNote._1 - controlNote) highNearestNote = (note, prob)
-        if (durationDistance < 0 && durationDistance >= shortNearestDuration._1 - controlDuration) shortNearestDuration = (duration, prob)
-        if (durationDistance > 0 && durationDistance <= longNearestDuration._1) longNearestDuration = (duration, prob)
-    }*/
-    //TODO @ LAB - verify force feedback direction and scaling
-    val scaling = 8
-    val xVector: Float = (mostProbableTransition._1._2 - controlDuration).toFloat * scaling
-    val yVector: Float = (mostProbableTransition._1._1 - controlNote).toFloat * scaling
-    kMMGUI.deviceController ! UpdateFeedbackForce((xVector, yVector))
-  }*/
 
   def mostProbable(t1: ((Int, Int), Double), t2: ((Int, Int), Double)): ((Int, Int), Double) = if (t1._2 > t2._2) t1 else t2
 

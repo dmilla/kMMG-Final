@@ -117,7 +117,7 @@ class MarkovExtractor extends Actor{
   def notify(msg: String) = kMMGUI.addOutput(msg)
 
   def receive = {
-    case TransitionsRequest(state: FixedList[(Int, Int)]) => sender ! TransitionsList(markovChain.transitionsFor(state.list)) // TODO - verify normalization is not needed
+    case TransitionsRequest(state: FixedList[(Int, Int)]) => sender ! TransitionsList(markovChain.transitionsFor(state.list))
     case HMMExtractionRequest(path) => extractMarkovChain(path)
     case UpdateMarkovOrder(newOrder: Byte) => order = newOrder
     case _ ⇒ println("FeaturesExtractor received unknown message")
