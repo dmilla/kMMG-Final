@@ -23,7 +23,7 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
 
   setTitle("Histograma del Control")
   setSize(new Dimension(1200, 400))
-  setLocation(500, 660)
+  setLocation(0, 680)
   val parentPanel = new JPanel(new BorderLayout())
 
   var firstIndex: Int = 0
@@ -31,21 +31,21 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
   val ANNOTATION_HEIGHT = 1
 
   val controlNotesCollection = new XYSeriesCollection()
-  val controlNotesData = new XYSeries("Nota del Control")
+  val controlNotesData = new XYSeries("Nota MIDI en el control")
   controlNotesData.add(0, 11)
   controlNotesData.add(1, 11)
   controlNotesCollection.addSeries(controlNotesData)
   var slidingNotesCollection = new SlidingXYDataset(controlNotesCollection, firstIndex, WINDOW)
 
   val controlDurationsCollection = new XYSeriesCollection()
-  val controlDurationsData = new XYSeries("Duración del Control")
+  val controlDurationsData = new XYSeries("Duración (Semicorcheas) en el control")
   controlDurationsData.add(0, 4)
   controlDurationsData.add(1, 4)
   controlDurationsCollection.addSeries(controlDurationsData)
   var slidingDurationsCollection = new SlidingXYDataset(controlDurationsCollection, firstIndex, WINDOW)
 
   val renderer = new StandardXYItemRenderer()
-  val noteAxis = new NumberAxis("Nota del Control")
+  val noteAxis = new NumberAxis("Nota MIDI")
   noteAxis.setRange(-1.6, 23.6)
   noteAxis.setTickUnit(new NumberTickUnit(1))
   val plot = new XYPlot(slidingNotesCollection, null, noteAxis, renderer)
@@ -56,7 +56,7 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
   plot.setDomainAxis(domainAxis)
 
   plot.setDataset(1, slidingDurationsCollection)
-  val durationAxis = new NumberAxis("Duración del Control")
+  val durationAxis = new NumberAxis("Duración (Semicorcheas)")
   durationAxis.setTickUnit(new NumberTickUnit(1))
   durationAxis.setRange(0.8, 16.2)
   durationAxis.setTickUnit(new NumberTickUnit(1))

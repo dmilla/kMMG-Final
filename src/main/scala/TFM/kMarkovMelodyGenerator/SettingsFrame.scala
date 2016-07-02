@@ -26,6 +26,7 @@ class SettingsFrame extends JFrame with Actor{
 
   val kLabel = new Label("Parámetro K (Peso del Control, [0, 1])")
   val kField = new TextField("0.8")
+  kField.peer.setMaximumSize(numberFieldSize)
 
   val tempoLabel = new Label("Tempo (BPM)")
   val tempoField = new TextField("120")

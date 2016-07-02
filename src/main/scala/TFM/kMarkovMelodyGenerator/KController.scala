@@ -13,6 +13,7 @@ class KController extends Actor{
   var k: Double = 0.8
   var maxNoteDistanceToControl = 6
   var maxDurationDistanceToControl = 3
+  var firstNote = true
 
   val formatter = new DecimalFormat("#.##")
   val durations = List(1, 2, 3, 4, 6, 8, 12, 16)
@@ -22,7 +23,7 @@ class KController extends Actor{
     val controlDurationIndex = (7 * xPosition).round.toInt // Normalized to 8 possible durations
     val controlDuration = durations(controlDurationIndex)
     //notify("Initial Markov probabilites: " + markovProbabilites)
-    notify("Control Note is: " + controlNote + " -  Control Duration is: " + controlDuration)
+    //notify("Control Note is: " + controlNote + " -  Control Duration is: " + controlDuration)
     val controlProbabilities = calcControlProbabilities(markovProbabilites, controlNote, controlDuration).toMap
     //notify("Final output probabilities: " + controlProbabilities)
     val out = sample[(Int, Int)](controlProbabilities)
@@ -31,7 +32,7 @@ class KController extends Actor{
   }
 
   def calcControlProbabilities(markovProbabilites: List[((Int, Int), Double)], controlNote: Int, controlDuration: Int) = {
-    val probs = scala.collection.mutable.Map[(Int, Int), Double]()
+    var probs = scala.collection.mutable.Map[(Int, Int), Double]()
     /*var lowNearestNote = -1
     var highNearestNote = 23
     var shortNearestDuration = 1
@@ -74,15 +75,15 @@ class KController extends Actor{
     var outProb: Double = (1.0 - k) * markovProbability
     if (noteDistance == 0 && durationDistance == 0) {
       val increase: Double = k * 0.4
-      notify(increase * 100 + "% prob increase for note " + note + " with duration " + duration)
+      notify("Se ha aumentado en un " + formatter.format(increase*100) + "% la probabilidad de la nota " + note + " con duración " + duration )
       outProb += increase
     } else if ((noteDistance == 0 && durationDistance == 1) || (durationDistance == 0 && noteDistance == 1)) {
       val increase: Double = k * 0.1
-      notify(increase * 100 + "% prob increase for note " + note + " with duration " + duration)
+      notify("Se ha aumentado en un " + formatter.format(increase*100) + "% la probabilidad de la nota " + note + " con duración " + duration )
       outProb += increase
     } else if (noteDistance <= 1 && durationDistance <= 1) {
       val increase: Double = k * 0.05
-      notify(increase * 100 + "% prob increase for note " + note + " with duration " + duration)
+      notify("Se ha aumentado en un " + formatter.format(increase*100) + "% la probabilidad de la nota " + note + " con duración " + duration )
       outProb += increase
     }
     outProb

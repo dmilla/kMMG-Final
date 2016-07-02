@@ -32,8 +32,8 @@ class JoystickChart extends JFrame with Actor{
   val transitionsAnnotations = ListBuffer.empty[XYShapeAnnotation]
 
   setTitle("Posición del Joystick")
-  setSize(new Dimension(800, 630))
-  setLocation(900, 0)
+  setSize(new Dimension(600, 500))
+  setLocation(1180, 0)
   val chartPanel = createChartPanel
   chartPanel.setDomainZoomable(false)
   chartPanel.setRangeZoomable(false)

@@ -20,7 +20,8 @@ class MarkovExtractor extends Actor{
   val durations = List(1, 2, 3, 4, 6, 8, 12, 16)
 
   def extractMarkovChain(path: String) = {
-    notify("Calculando Markov Chain con las notas y duración de los archivos txt en la carpeta: " + path)
+    notify("\nCalculando Cadena de Markov de orden " + order + " con las notas y duración de los archivos txt en la carpeta: " + path + "\n")
+    markovChain = new MarkovChain[(Int, Int)]()
     val pathFile = new File(path)
     val notesWithDuration = ArrayBuffer.empty[(Int, Int)]
     var count = 0
@@ -49,13 +50,23 @@ class MarkovExtractor extends Actor{
         //notify("prevStatus: " + prevStatus)
       }
     }
+
+    // asegurarse de que siempre existen transiciones para cada estado
+    (0 to order - 1).foreach{ case i: Int =>
+      val statusList = ListBuffer.empty[(Int, Int)]
+      prevStatus.foreach(statusList += _)
+      markovChain = markovChain.addTransition(statusList, normalizedNotesWithDurations(i))
+      prevStatus.append(normalizedNotesWithDurations(i))
+    }
     kMMGUI.conductor ! InitializeState(prevStatus)
-    markovChain = markovChain.addTransition(prevStatus.list, normalizedNotesWithDurations.head) // asegurarse de que siempre existen transiciones para cada estado
     kMMGUI.conductor ! TransitionsList(markovChain.transitionsFor(prevStatus.list))
-    notify(markovChain.states().toString())
-    markovChain.states().foreach( state =>
+    val statesCount = markovChain.states.size
+    val controllableStatesCount = markovChain.controllableTransitionsCount()
+    notify("\nModelo generado correctamente, número total de estados: " + statesCount)
+    notify("Estados con más de una transición posible: " + ((controllableStatesCount.toDouble/statesCount) * 100).round + "% (" + controllableStatesCount + ")")
+    /*markovChain.states().foreach( state =>
       notify("transitions for " + state + ": " + markovChain.transitionsFor(state).toString())
-    )
+    )*/
     notify("\n¡Notas extraídas exitosamente de los " + count + " ficheros encontrados en " + path + "! Se ha generado un modelo de Markov con un total de " + NumberFormat.getIntegerInstance().format(transitionsCount) + " transiciones")
   }
 

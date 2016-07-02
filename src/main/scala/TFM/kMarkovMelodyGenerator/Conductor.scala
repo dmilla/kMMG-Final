@@ -38,11 +38,10 @@ class Conductor extends Actor{
   var programChange: Byte = 0
 
   var initialized: Boolean = false
-  var started: Boolean = false
 
   var currentTick: Long = 0
   //var currentNoteEndTick: Long = 0
-  var currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, 12 + outNormalization, 127), 5)
+  var currentNoteEndMidiEvent = new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, 12 + outNormalization, 127), 0)
 
   val sequencerSystem = ActorSystem("sequencerSystem")
   val sequencerWatcher = sequencerSystem.actorOf(Props(classOf[SequencerWatcher], sequencer))
@@ -59,27 +58,25 @@ class Conductor extends Actor{
       requestNextNote()
       initialized = true
       true
-    } else {
+    } else if (!initialized) {
       notify("No se ha podido inicializar el secuenciador, es necesario generar el modelo de Markov previamente.")
       false
     }
   }
 
   def startMelodyGeneration() = {
-    if (!started) {
+    if (!sequencer.isRunning) {
       initializeSequencer
       //sequencer.setTickPosition(0)
       sequencer.start()
-      started = true
     } else {
       notify("La melodía ya se está generando")
     }
   }
 
   def stopMelodyGeneration() = {
-    if (started) {
+    if (sequencer.isRunning) {
       sequencer.stop()
-      started = false
     } else {
       notify("La melodía ya está parada")
     }

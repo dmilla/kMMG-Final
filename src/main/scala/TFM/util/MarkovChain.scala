@@ -42,6 +42,10 @@ class MarkovChain[S](transitionMap: Map[ListBuffer[S], MarkovTransitionSet[S]]) 
     transitionMap.keys
   }
 
+  def controllableTransitionsCount(): Int = {
+    transitionMap.filter((t) => t._2.controllable).size
+  }
+
 }
 
 class MarkovTransitionSet[S](transitionCounter: Map[S, Int]) {
@@ -78,5 +82,7 @@ class MarkovTransitionSet[S](transitionCounter: Map[S, Int]) {
   def toList() = {
     transitionCounter.toList.map(tup => (tup._1, tup._2.toDouble / totalCount))
   }
+
+  def controllable: Boolean = transitionCounter.size > 1
 
 }
