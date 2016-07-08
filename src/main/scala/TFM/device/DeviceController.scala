@@ -169,7 +169,7 @@ class DeviceController extends Actor{
       val controlDurationIndex = (7 * currentNormalizedCoords._1).round.toInt // Normalized to 8 possible durations
       val controlDuration = durations(controlDurationIndex)
       val controlNote = (23 * currentNormalizedCoords._2).round.toInt
-      val scaling = 0.08f
+      val scaling = 26
       val xVector: Float = (currentMostProbableTransition._1._2 - controlDuration).toFloat * scaling
       val yVector: Float = (currentMostProbableTransition._1._1 - controlNote).toFloat * scaling
       calcVirtualForce((xVector, yVector))
@@ -196,7 +196,7 @@ class DeviceController extends Actor{
 
     //out[0] = -tau1;
     //out[1] = tau2;
-    notify("new torque for vector " + forceVector + " - taus sent: " + -tau1 + " " + tau2)
+    //notify("new torque for vector " + forceVector + " - taus sent: " + -tau1 + " " + tau2)
     val res = ByteString(shortToBytes((-tau1).toShort) ++ shortToBytes(tau2.toShort))
     deviceTorque = res
     res

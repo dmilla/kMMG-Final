@@ -15,7 +15,7 @@ import scala.concurrent.duration._
   */
 class BytePublisher extends ActorPublisher[ByteString] {
   var queue: mutable.Queue[ByteString] = mutable.Queue()
-  var tickChecker = kMMGUI.controlSystem.scheduler.schedule(10 milliseconds, 10 milliseconds)(publishIfNeeded())
+  var tickChecker = kMMGUI.controlSystem.scheduler.schedule(1 milliseconds, 1 milliseconds)(publishIfNeeded())
 
   def receive = {
     case Publish(b: ByteString) =>

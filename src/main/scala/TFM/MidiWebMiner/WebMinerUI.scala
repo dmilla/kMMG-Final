@@ -158,10 +158,12 @@ class WebMinerUI extends Frame {
 
   def addCrawlerOutput(out: String): Unit = {
     crawlerOutputField.append(out + "\n")
+    crawlerOutputField.peer.setCaretPosition(crawlerOutputField.peer.getDocument.getLength)
   }
 
   def addExtractorOutput(out: String): Unit = {
     extractorOutputField.append(out + "\n")
+    extractorOutputField.peer.setCaretPosition(extractorOutputField.peer.getDocument.getLength)
   }
 
 }
