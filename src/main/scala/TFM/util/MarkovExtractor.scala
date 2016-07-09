@@ -28,7 +28,7 @@ class MarkovExtractor extends Actor{
     for(file <- pathFile.listFiles if file.getName endsWith ".txt"){
       try {
         val fileNotes = extractNotesWithDurationFromTxt(file)
-        notify("Extraidas " + fileNotes.size + " notas de " + file.getName)
+        notify("Extraidas " + fileNotes.size + " notas de " + file.getName + " nota mínima: " + fileNotes.reduceLeft(lowestNote).toString + " - nota máxima: " + fileNotes.reduceLeft(highestNote).toString)
         notesWithDuration ++= fileNotes
         count += 1
       } catch {
@@ -113,6 +113,10 @@ class MarkovExtractor extends Actor{
     }
     res
   }
+
+  def lowestNote(t1: (Int, Int), t2: (Int, Int)): (Int, Int) = if (t1._1 < t2._1 && t1._1 != -1) t1 else t2
+
+  def highestNote(t1: (Int, Int), t2: (Int, Int)): (Int, Int) = if (t1._1 > t2._1) t1 else t2
 
   def notify(msg: String) = kMMGUI.addOutput(msg)
 
