@@ -32,7 +32,7 @@ class SettingsFrame extends JFrame with Actor{
   val tempoField = new TextField("120")
 
   val normLabel = new Label("Normalización de las notas (octava inicial)")
-  val normField = new ComboBox(List(0, 2, 4, 6, 8))
+  val normField = new ComboBox(0 to 8)
   normField.peer.setSelectedIndex(2)
 
   val noteDistanceLabel = new Label("Distancia máxima entre la nota de salida y el control")
@@ -100,6 +100,10 @@ class SettingsFrame extends JFrame with Actor{
 
   def receive: Receive = {
     case SetVisible => setVisible(true)
+    case UpdateOutputNormalization(norm: Byte) => {
+      val index = norm/12
+      normField.peer.setSelectedIndex(index)
+    }
   }
 
 }

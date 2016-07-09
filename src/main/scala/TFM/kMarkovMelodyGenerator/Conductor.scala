@@ -33,7 +33,7 @@ class Conductor extends Actor{
   var currentCoords: (Double, Double) = (0.5, 0.5)
   var lastNoteCoords: (Double, Double) = (0.5, 0.5)
 
-  var outNormalization: Byte = 48
+  var outNormalization: Byte = 0
   var currentTempo: Int = 120
   var programChange: Byte = 0
 
@@ -87,7 +87,8 @@ class Conductor extends Actor{
     currentTick = tick
     val controlDurationIndex = (7 * currentCoords._1).round.toInt // Normalized to 8 possible durations
     val controlDuration = durations(controlDurationIndex)
-    val controlNote = (23 * currentCoords._2).round.toInt
+    //val controlNote = (23 * currentCoords._2).round.toInt
+    val controlNote = (36 * currentCoords._2).round.toInt - 1
     kMMGUI.historyChart ! UpdateHistogram(controlNote, controlDuration, currentTick)
     if (currentTick >= currentNoteEndMidiEvent.getTick- 1) requestNextNote()
     else if (currentCoords._1 < lastNoteCoords._1) {

@@ -32,12 +32,12 @@ class JoystickChart extends JFrame with Actor{
   val transitionsAnnotations = ListBuffer.empty[XYShapeAnnotation]
 
   setTitle("Posición del Joystick")
-  setSize(new Dimension(600, 500))
+  setSize(new Dimension(600, 680))
   setLocation(1180, 0)
   val chartPanel = createChartPanel
   chartPanel.setDomainZoomable(false)
   chartPanel.setRangeZoomable(false)
-  chartPanel.setPreferredSize(new Dimension(800, 600))
+  chartPanel.setPreferredSize(new Dimension(800, 900))
   addAnnotation(controlRangeAnnotation)
 
   chartPanel.addChartMouseListener(new ChartMouseListener() {
@@ -93,7 +93,7 @@ class JoystickChart extends JFrame with Actor{
 
   def createTransitionAnnotation(note: Int, duration: Int, probability: Double) = {
     val xPosition = durations.indexOf(duration) * (1.0f/durations.size.toFloat)
-    val yPosition = (note + 1) * 0.04 // adapted for -1 as silence
+    val yPosition = (note + 1) * 0.027 // adapted for -1 as silence
     val alpha = 108
     val color: Color = probability match {
       case x if x < 0.02 => new Color(206, 0, 0, alpha)
@@ -104,7 +104,7 @@ class JoystickChart extends JFrame with Actor{
     }
     //val oldColor = new Color(51, 204, 51, Math.min(Math.max((probability * 1.5 * 255).toInt, 25), 255))
     new XYShapeAnnotation(
-      new Rectangle2D.Double(xPosition, yPosition, 0.125, 0.04),
+      new Rectangle2D.Double(xPosition, yPosition, 0.125, 0.027),
       new BasicStroke(0.0f),
       color,
       color
@@ -112,12 +112,12 @@ class JoystickChart extends JFrame with Actor{
   }
 
   def createControlRangeAnnotation = {
-    val note = (24 * lastY).round.toInt - 1
+    val note = (36 * lastY).round.toInt - 1
     val duration = durations((7 * lastX).round.toInt)
     val xPosition = durations.indexOf(duration) * (1.0f/durations.size.toFloat)
-    val yPosition = (note + 1) * 0.04 // adapted for -1 as silence
+    val yPosition = (note + 1) * 0.027 // adapted for -1 as silence
     new XYShapeAnnotation(
-      new Ellipse2D.Double(xPosition - 0.0625, yPosition - 0.02, 0.25, 0.08),
+      new Ellipse2D.Double(xPosition - 0.0625, yPosition - 0.0135, 0.25, 0.054),
       new BasicStroke(0.8f),
       Color.black,
       new Color(53, 206, 53, 26)

@@ -22,8 +22,8 @@ import org.jfree.ui.Layer
 class HistoryChart extends JFrame with Actor with ChangeListener{
 
   setTitle("Histograma del Control")
-  setSize(new Dimension(1200, 400))
-  setLocation(0, 680)
+  setSize(new Dimension(1200, 600))
+  setLocation(0, 480)
   val parentPanel = new JPanel(new BorderLayout())
 
   var firstIndex: Int = 0
@@ -46,7 +46,7 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
 
   val renderer = new StandardXYItemRenderer()
   val noteAxis = new NumberAxis("Nota MIDI")
-  noteAxis.setRange(-1.6, 23.6)
+  noteAxis.setRange(-1.6, 35.6)
   noteAxis.setTickUnit(new NumberTickUnit(1))
   val plot = new XYPlot(slidingNotesCollection, null, noteAxis, renderer)
   plot.setRangeAxisLocation(AxisLocation.BOTTOM_OR_LEFT)
@@ -67,7 +67,7 @@ class HistoryChart extends JFrame with Actor with ChangeListener{
 
   val chart = new JFreeChart("Histograma del Control", JFreeChart.DEFAULT_TITLE_FONT, plot, true)
   val chartPanel = new ChartPanel(chart)
-  chartPanel.setPreferredSize(new Dimension(600, 300))
+  //chartPanel.setPreferredSize(new Dimension(600, 300))
   chartPanel.setDomainZoomable(false)
   chartPanel.setRangeZoomable(false)
 
