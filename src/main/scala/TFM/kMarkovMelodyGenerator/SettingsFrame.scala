@@ -33,7 +33,7 @@ class SettingsFrame extends JFrame with Actor{
 
   val normLabel = new Label("Normalización de las notas (octava inicial)")
   val normField = new ComboBox(0 to 8)
-  normField.peer.setSelectedIndex(2)
+  normField.peer.setSelectedIndex(0)
 
   val noteDistanceLabel = new Label("Distancia máxima entre la nota de salida y el control")
   val noteDistanceField = new ComboBox(1 to 25)
@@ -41,7 +41,7 @@ class SettingsFrame extends JFrame with Actor{
 
   val durationDistanceLabel = new Label("Distancia máxima entre la duración de salida y el control")
   val durationDistanceField = new ComboBox(1 to 8)
-  durationDistanceField.peer.setSelectedIndex(2)
+  durationDistanceField.peer.setSelectedIndex(1)
 
   val programChangeLabel = new Label("Instrumento (MIDI Program Change)")
   val programChangeField = new ComboBox(0 to 127)

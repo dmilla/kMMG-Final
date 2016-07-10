@@ -12,7 +12,7 @@ import TFM.CommProtocol._
 import TFM.kMarkovMelodyGenerator.kMMGUI
 import akka.actor.Actor
 import org.jfree.chart._
-import org.jfree.chart.annotations.XYShapeAnnotation
+import org.jfree.chart.annotations.{XYAnnotation, XYLineAnnotation, XYShapeAnnotation}
 import org.jfree.chart.plot.PlotOrientation
 import org.jfree.data.xy.{XYDataset, XYSeries, XYSeriesCollection}
 import org.jfree.ui.Layer
@@ -27,9 +27,12 @@ class JoystickChart extends JFrame with Actor{
   var lastX: Double = 0.5
   var lastY: Double = 0.5
   var controlRangeAnnotation = createControlRangeAnnotation
+  var maxNoteDistanceToControl: Byte = 6
+  var maxDurationDistanceToControl: Byte = 2
 
   lazy val durations = List(1, 2, 3, 4, 6, 8, 12, 16)
   val transitionsAnnotations = ListBuffer.empty[XYShapeAnnotation]
+  val maxDistanceAnnotations = ListBuffer.empty[XYLineAnnotation]
 
   setTitle("Posición del Joystick")
   setSize(new Dimension(600, 680))
@@ -39,6 +42,7 @@ class JoystickChart extends JFrame with Actor{
   chartPanel.setRangeZoomable(false)
   chartPanel.setPreferredSize(new Dimension(800, 900))
   addAnnotation(controlRangeAnnotation)
+  addMaxDistanceAnnotations
 
   chartPanel.addChartMouseListener(new ChartMouseListener() {
 
@@ -70,8 +74,8 @@ class JoystickChart extends JFrame with Actor{
   def createChartPanel: ChartPanel = {
     val jfreechart = ChartFactory.createScatterPlot("Posición del Joystick", "X", "Y", createDatasetFromPoint(lastX, lastY), PlotOrientation.VERTICAL, true, true, false)
     val xyPlot = jfreechart.getXYPlot
-    xyPlot.setDomainCrosshairVisible(true)
-    xyPlot.setRangeCrosshairVisible(true)
+    //xyPlot.setDomainCrosshairVisible(true)
+    //xyPlot.setRangeCrosshairVisible(true)
     val renderer = xyPlot.getRenderer
     renderer.setSeriesPaint(0, Color.blue)
     val domain = xyPlot.getDomainAxis
@@ -83,11 +87,11 @@ class JoystickChart extends JFrame with Actor{
     new ChartPanel(jfreechart)
   }
 
-  def addAnnotation(annotation: XYShapeAnnotation) = {
+  def addAnnotation(annotation: XYAnnotation) = {
     chartPanel.getChart.getXYPlot.getRenderer.addAnnotation(annotation, Layer.BACKGROUND)
   }
 
-  def removeAnnotation(annotation: XYShapeAnnotation) = {
+  def removeAnnotation(annotation: XYAnnotation) = {
     chartPanel.getChart.getXYPlot.getRenderer.removeAnnotation(annotation)
   }
 
@@ -124,6 +128,25 @@ class JoystickChart extends JFrame with Actor{
     )
   }
 
+  def addMaxDistanceAnnotations = {
+    maxDistanceAnnotations.foreach(removeAnnotation(_))
+    maxDistanceAnnotations.clear()
+    val minNote = Math.max((36 * lastY).round.toInt - 1 - maxNoteDistanceToControl, -1)
+    val minDuration = durations(Math.max((7 * lastX).round.toInt - maxDurationDistanceToControl, 0))
+    val maxNote = Math.min((36 * lastY).round.toInt - 1 + maxNoteDistanceToControl, 35)
+    val maxDuration = durations(Math.min((7 * lastX).round.toInt + maxDurationDistanceToControl, 7))
+    val minX = durations.indexOf(minDuration) * (1.0f/durations.size.toFloat)
+    val maxX = (durations.indexOf(maxDuration) + 1) * (1.0f/durations.size.toFloat)
+    val minY = (minNote + 1) * 0.027
+    val maxY = (maxNote + 2) * 0.027
+    maxDistanceAnnotations += new XYLineAnnotation(maxX, minY, maxX, maxY, new BasicStroke(0.8f), Color.blue)
+    maxDistanceAnnotations += new XYLineAnnotation(maxX, minY, minX, minY, new BasicStroke(0.8f), Color.blue)
+    maxDistanceAnnotations += new XYLineAnnotation(minX, minY, minX, maxY, new BasicStroke(0.8f), Color.blue)
+    maxDistanceAnnotations += new XYLineAnnotation(minX, maxY, maxX, maxY, new BasicStroke(0.8f), Color.blue)
+    maxDistanceAnnotations.foreach(addAnnotation(_))
+  }
+
+
   /*def addAnnotation(plot: XYPlot) = {
     plot.getRenderer.addAnnotation(
       new XYShapeAnnotation(
@@ -143,22 +166,7 @@ class JoystickChart extends JFrame with Actor{
     removeAnnotation(controlRangeAnnotation)
     controlRangeAnnotation = createControlRangeAnnotation
     addAnnotation(controlRangeAnnotation)
-    /*val controlDurationIndex = (7 * coords._1).round.toInt // Normalized to 8 possible durations
-    val controlDuration = durations(controlDurationIndex)
-    val controlNote = (23 * coords._2).round.toInt
-    var lowNearestNote = -1
-    var highNearestNote = 23
-    var shortNearestDuration = 1
-    var longNearestDuration = 16
-    currentStateTransitions.foreach{
-      case((note: Int, duration: Int), prob: Double) =>
-        val noteDistance = note - controlNote
-        val durationDistance = duration - controlDuration
-        if (noteDistance < 0 && noteDistance >= lowNearestNote - controlNote) lowNearestNote = note
-        if (noteDistance > 0 && noteDistance <= highNearestNote - controlNote) highNearestNote = note
-        if (durationDistance < 0 && durationDistance >= shortNearestDuration - controlDuration) shortNearestDuration = duration
-        if (durationDistance > 0 && durationDistance <= longNearestDuration) longNearestDuration = duration
-    }*/
+    addMaxDistanceAnnotations
   }
 
   def createDatasetFromPoint(x: Double, y: Double): XYDataset = {
@@ -201,6 +209,12 @@ class JoystickChart extends JFrame with Actor{
       } catch {
         case e: Exception => println("JoystickChart - Excepción dibujando transiciones: " + e)
       }
+    case UpdateMaxNoteDistanceToControl(distance: Byte) =>
+      maxNoteDistanceToControl = distance
+      addMaxDistanceAnnotations
+    case UpdateMaxDurationDistanceToControl(distance: Byte) =>
+      maxDurationDistanceToControl = distance
+      addMaxDistanceAnnotations
     case _ ⇒ println("JoystickChart received unknown message")
   }
 

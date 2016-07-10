@@ -11,8 +11,8 @@ import akka.actor.Actor
 class KController extends Actor{
 
   var k: Double = 0.8
-  var maxNoteDistanceToControl = 6
-  var maxDurationDistanceToControl = 3
+  var maxNoteDistanceToControl: Byte = 6
+  var maxDurationDistanceToControl: Byte = 2
   var firstNote = true
 
   val formatter = new DecimalFormat("#.##")
@@ -60,7 +60,7 @@ class KController extends Actor{
       case((note, duration), prob) =>
         val noteDistance: Int = math.abs(controlNote - note)
         val durationDistance: Int = math.abs(durations.indexOf(controlDuration) - durations.indexOf(duration))
-        if (noteDistance <= maxNoteDistanceToControl && durationDistance <= maxDurationDistanceToControl) probs += ((note, duration) -> calcNoteAndDurationProbability(prob, note, noteDistance, duration, durationDistance))
+        if ((noteDistance <= maxNoteDistanceToControl || note == -1) && durationDistance <= maxDurationDistanceToControl) probs += ((note, duration) -> calcNoteAndDurationProbability(prob, note, noteDistance, duration, durationDistance))
     }
     if (probs.isEmpty) {
       markovProbabilites.foreach{
@@ -113,6 +113,7 @@ class KController extends Actor{
   def updateMaxDurationDistance(distance: Byte): Boolean = {
     if (distance != maxDurationDistanceToControl) {
       maxDurationDistanceToControl = distance
+      kMMGUI.joystickChart ! UpdateMaxDurationDistanceToControl(maxDurationDistanceToControl)
       notify("Distancia máxima de la duración de salida respecto al control ajustada correctamente a " + maxDurationDistanceToControl)
       true
     } else false
@@ -121,6 +122,7 @@ class KController extends Actor{
   def updateMaxNoteDistance(distance: Byte): Boolean = {
     if (distance != maxNoteDistanceToControl) {
       maxNoteDistanceToControl = distance
+      kMMGUI.joystickChart ! UpdateMaxNoteDistanceToControl(maxNoteDistanceToControl)
       notify("Distancia máxima de la nota de salida respecto al control ajustada correctamente a " + maxNoteDistanceToControl)
       true
     } else false
