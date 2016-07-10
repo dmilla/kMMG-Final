@@ -124,7 +124,7 @@ class JoystickChart extends JFrame with Actor{
       new Ellipse2D.Double(xPosition - 0.0625, yPosition - 0.0135, 0.25, 0.054),
       new BasicStroke(0.8f),
       Color.black,
-      new Color(53, 206, 53, 26)
+      new Color(0, 108, 255, 26)
     )
   }
 
@@ -139,10 +139,11 @@ class JoystickChart extends JFrame with Actor{
     val maxX = (durations.indexOf(maxDuration) + 1) * (1.0f/durations.size.toFloat)
     val minY = (minNote + 1) * 0.027
     val maxY = (maxNote + 2) * 0.027
-    maxDistanceAnnotations += new XYLineAnnotation(maxX, minY, maxX, maxY, new BasicStroke(0.8f), Color.blue)
-    maxDistanceAnnotations += new XYLineAnnotation(maxX, minY, minX, minY, new BasicStroke(0.8f), Color.blue)
-    maxDistanceAnnotations += new XYLineAnnotation(minX, minY, minX, maxY, new BasicStroke(0.8f), Color.blue)
-    maxDistanceAnnotations += new XYLineAnnotation(minX, maxY, maxX, maxY, new BasicStroke(0.8f), Color.blue)
+    val color = new Color(0, 108, 255, 255)
+    maxDistanceAnnotations += new XYLineAnnotation(maxX, minY, maxX, maxY, new BasicStroke(0.8f), color)
+    maxDistanceAnnotations += new XYLineAnnotation(maxX, minY, minX, minY, new BasicStroke(0.8f), color)
+    maxDistanceAnnotations += new XYLineAnnotation(minX, minY, minX, maxY, new BasicStroke(0.8f), color)
+    maxDistanceAnnotations += new XYLineAnnotation(minX, maxY, maxX, maxY, new BasicStroke(0.8f), color)
     maxDistanceAnnotations.foreach(addAnnotation(_))
   }
 
