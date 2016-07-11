@@ -5,8 +5,8 @@ package TFM.kMarkovMelodyGenerator.charts
   */
 
 import java.awt.geom.{Ellipse2D, Rectangle2D}
-import java.awt.{BasicStroke, BorderLayout, Color}
-import javax.swing.{JFrame, JPanel}
+import java.awt.{BasicStroke, Color}
+import javax.swing.JFrame
 
 import TFM.CommProtocol._
 import TFM.kMarkovMelodyGenerator.kMMGUI
@@ -42,7 +42,7 @@ class JoystickChart extends JFrame with Actor{
   chartPanel.setRangeZoomable(false)
   chartPanel.setPreferredSize(new Dimension(800, 900))
   addAnnotation(controlRangeAnnotation)
-  addMaxDistanceAnnotations
+  addMaxDistanceAnnotations()
 
   chartPanel.addChartMouseListener(new ChartMouseListener() {
 
@@ -128,7 +128,7 @@ class JoystickChart extends JFrame with Actor{
     )
   }
 
-  def addMaxDistanceAnnotations = {
+  def addMaxDistanceAnnotations() = {
     maxDistanceAnnotations.foreach(removeAnnotation(_))
     maxDistanceAnnotations.clear()
     val minNote = Math.max((36 * lastY).round.toInt - 1 - maxNoteDistanceToControl, -1)
@@ -167,7 +167,7 @@ class JoystickChart extends JFrame with Actor{
     removeAnnotation(controlRangeAnnotation)
     controlRangeAnnotation = createControlRangeAnnotation
     addAnnotation(controlRangeAnnotation)
-    addMaxDistanceAnnotations
+    addMaxDistanceAnnotations()
   }
 
   def createDatasetFromPoint(x: Double, y: Double): XYDataset = {
@@ -212,10 +212,10 @@ class JoystickChart extends JFrame with Actor{
       }
     case UpdateMaxNoteDistanceToControl(distance: Byte) =>
       maxNoteDistanceToControl = distance
-      addMaxDistanceAnnotations
+      addMaxDistanceAnnotations()
     case UpdateMaxDurationDistanceToControl(distance: Byte) =>
       maxDurationDistanceToControl = distance
-      addMaxDistanceAnnotations
+      addMaxDistanceAnnotations()
     case _ ⇒ println("JoystickChart received unknown message")
   }
 

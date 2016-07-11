@@ -37,6 +37,8 @@ class Conductor extends Actor{
   var currentTempo: Int = 120
   var programChange: Byte = 0
 
+  var firstNoteDuration = 0
+
   var initialized: Boolean = false
 
   var currentTick: Long = 0
@@ -45,7 +47,7 @@ class Conductor extends Actor{
 
   val sequencerSystem = ActorSystem("sequencerSystem")
   val sequencerWatcher = sequencerSystem.actorOf(Props(classOf[SequencerWatcher], sequencer))
-  var tickChecker = sequencerSystem.scheduler.schedule(1 milliseconds, 1 millisecond)(sequencerWatcher ! CheckSequencerTick)
+  var tickChecker = sequencerSystem.scheduler.schedule(0 milliseconds, 1 millisecond, sequencerWatcher, CheckSequencerTick)
 
   def initializeSequencer = {
     if (!initialized && currentState.full && !currentStateTransitions.isEmpty) {
@@ -126,16 +128,19 @@ class Conductor extends Actor{
     kMMGUI.historyChart ! DrawNoteCut(currentNoteEndTick, currentState.last._1)
   }
 
-  def requestNextNote() = {
+  def requestNextNote(): Boolean = {
     if (currentStateTransitions.nonEmpty) {
       implicit val timeout = Timeout(80 milliseconds)
       val noteFuture = kMMGUI.kController ? CalcNoteOutputRequest(currentStateTransitions, currentCoords._1, currentCoords._2)
       val nextNote = Await.result(noteFuture, timeout.duration).asInstanceOf[(Int, Int)] // Warning, synchronous request!
       addNextNote(nextNote)
+      if (firstNoteDuration == 0) firstNoteDuration = nextNote._2
+      true
     }
     else {
       stopMelodyGeneration()
       notify("Error while trying to get Markov Transitions, please generate model first. Melody generation has been stopped.")
+      false
     }
   }
 
@@ -186,6 +191,10 @@ class Conductor extends Actor{
     case TransitionsList(list: List[((Int, Int), Double)]) =>
       kMMGUI.joystickChart ! TransitionsList(list)
       currentStateTransitions = list
+      if (firstNoteDuration == 1) {
+        requestNextNote()
+        firstNoteDuration = -1
+      }
       kMMGUI.deviceController ! MostProbableTransition(currentStateTransitions.reduceLeft(mostProbable))
       //notify("\nConductor received new transitions list!!!\n")
     case SaveMidiTrackRequest => saveMidiTrack
