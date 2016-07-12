@@ -24,7 +24,7 @@ class SettingsFrame extends JFrame with Actor{
   val labelSize = new Dimension(300, 25)
   val numberFieldSize = new Dimension(60, 25)
 
-  val kLabel = new Label("Parámetro K (Peso del Control, [0, 1])")
+  val kLabel = new Label("k (Peso de la Referencia, [0, 1])")
   val kField = new TextField("0.8")
   kField.peer.setMaximumSize(numberFieldSize)
 

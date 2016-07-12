@@ -180,6 +180,16 @@ class Conductor extends Actor{
     } else false
   }
 
+  def mostProbableTransition: ((Int, Int), Double) = {
+    if (currentStateTransitions.length > 1) {
+      currentStateTransitions.reduceLeft(mostProbable)
+    } else if (currentStateTransitions.nonEmpty) {
+      currentStateTransitions.head
+    } else {
+      ((12, 4), 0)
+    }
+  }
+
   def notify(msg: String) = kMMGUI.addOutput(msg)
 
   def receive() = {
@@ -195,7 +205,7 @@ class Conductor extends Actor{
         requestNextNote()
         firstNoteDuration = -1
       }
-      kMMGUI.deviceController ! MostProbableTransition(currentStateTransitions.reduceLeft(mostProbable))
+      kMMGUI.deviceController ! MostProbableTransition(mostProbableTransition)
       //notify("\nConductor received new transitions list!!!\n")
     case SaveMidiTrackRequest => saveMidiTrack
     case UpdateTempo(tempo: Int) => updateTempo(tempo)

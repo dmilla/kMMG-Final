@@ -167,10 +167,9 @@ class DeviceController extends Actor{
   def updateFeedbackForce = {
     if (currentMostProbableTransition._2 > 0) {
       val controlDurationIndex = (7 * currentNormalizedCoords._1).round.toInt // Normalized to 8 possible durations
-      val controlDuration = durations(controlDurationIndex)
-      val controlNote = (23 * currentNormalizedCoords._2).round.toInt
-      val scaling = 26
-      val xVector: Float = (currentMostProbableTransition._1._2 - controlDuration).toFloat * scaling
+      val controlNote = (35 * currentNormalizedCoords._2).round.toInt
+      val scaling = 8.0f
+      val xVector: Float = (durations.indexOf(currentMostProbableTransition._1._2) - controlDurationIndex).toFloat * scaling
       val yVector: Float = (currentMostProbableTransition._1._1 - controlNote).toFloat * scaling
       calcVirtualForce((xVector, yVector))
     }
